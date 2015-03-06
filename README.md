@@ -6,7 +6,7 @@ If you want to manipulate pixels then upload them to a widget, this is the LGPL 
 
 ##KPImage
 * The KPImage class (short for Kivy pixel image) is what you want to use if you want to manipulate pixels yourself and later upload them to a Kivy Widget.
-* KPImage integrates with kivy pixel formats, and accounts for the oddity where pygame saves png file with Green and Blue switched. (see saveAs method)
+* KPImage integrates with kivy pixel formats, and accounts for the oddity where pygame saves png file with Green and Blue switched. (see saveAs method if you want to see how the problem is fixed)
 * Has a Python-only base class called PPImage (short for Python pixel image) that does not depend on anything outside of python itself.
 
 ##Release notes
