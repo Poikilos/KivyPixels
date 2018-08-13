@@ -14,7 +14,7 @@ def load_image(self,fileName):
         returnKVI = KPImage(newSurface.get_size())
         data = pygame.image.tostring(newSurface, 'RGBA', False)
         # blit_copy_with_bo(self, inputArray, inputStride,
-                          # inputByteDepth, inputWidth, inputHeight,
+                          # inputByteDepth, input_size,
                           # bOffset, gOffset, rOffset, aOffset):
 
         newSurface_byteDepth = newSurface.get_bytesize()
@@ -27,8 +27,7 @@ def load_image(self,fileName):
         aOffset = 3
         returnKVI.blit_copy_with_bo(data, newSurface_stride,
                                     newSurface_byteDepth,
-                                    newSurface.get_width(),
-                                    newSurface.get_height(),
+                                    newSurface.get_size(),
                                     bOffset, gOffset, rOffset,
                                     aOffset)
     else:
@@ -89,7 +88,7 @@ class KPImage(PPImage):
         self.init(newSurface.get_size())
         data = pygame.image.tostring(newSurface, 'RGBA', False)
         # blit_copy_with_bo(self, inputArray, inputStride,
-                          # inputByteDepth, inputWidth, inputHeight,
+                          # inputByteDepth, input_size,
                           # bOffset, gOffset, rOffset, aOffset):
 
         newSurface_byteDepth = newSurface.get_bytesize()
@@ -102,8 +101,7 @@ class KPImage(PPImage):
         aOffset = 3
         KPImage.blit_copy_with_bo(self, data, newSurface_stride,
                                   newSurface_byteDepth,
-                                  newSurface.get_width(),
-                                  newSurface.get_height(),
+                                  newSurface.get_size(),
                                   bOffset, gOffset, rOffset, aOffset)
 
 
@@ -118,20 +116,18 @@ class KPImage(PPImage):
         # self.pixelBuffer.blit_copy_with_bo(self.fbo.pixels,
                                            # self.assumed_fbo_stride,
                                            # self.assumed_fbo_byteDepth,
-                                           # self.fbo.size[0],
-                                           # self.fbo.size[1],
+                                           # self.fbo.size,
                                            # bOffset, gOffset, rOffset,
                                            # aOffset)
         try:
             if (self.debugEnabled):
-                print("self.width:"+str(self.width))
-                print("self.height:"+str(self.height))
+                print("self.size:"+str(self.size))
                 print("len(self.data):"+str(len(self.data)))
                 # print("self.getMaxChannelValueNotIncludingAlpha():" +
                       # str(self.getMaxChannelValueNotIncludingAlpha()))
                 # print("self.getMaxAlphaValue():" +
                       # str(self.getMaxAlphaValue()))
-            translatedImage = KPImage((self.width, self.height),
+            translatedImage = KPImage(self.size,
                                       byte_depth=self.byteDepth)
 
 
@@ -158,7 +154,7 @@ class KPImage(PPImage):
             # channel order
             translatedImage.blit_copy_with_bo(self.data, self.stride,
                                               self.byteDepth,
-                                              self.width, self.height,
+                                              self.size,
                                               self.bOffset,
                                               self.gOffset,
                                               self.rOffset,
@@ -168,16 +164,18 @@ class KPImage(PPImage):
             if (self.debugEnabled):
                 debugX = 3
                 debugY = self.height - 3
-                if (debugX>=self.width): debugX=self.width-1
-                if (debugY>=self.height): debugY=self.height-1
+                if (debugX>=self.width):
+                    debugX=self.width-1
+                if (debugY>=self.height):
+                    debugY=self.height-1
                 debugIndex = debugY*self.stride + debugX*self.byteDepth
                 print("debug pixel at (" + str(debugX) + "," +
                       str(debugY) + "): " +
                       bufferToTupleStyleString(data, debugIndex,
                       self.byteDepth)
                 )
-            surface = pygame.image.fromstring(data,
-                (self.width, self.height), 'RGBA', True)
+            surface = pygame.image.fromstring(data, self.size, 'RGBA',
+                                              True)
             pygame.image.save(surface, fileName)
             IsOK = True
         except Exception as e:
@@ -252,10 +250,10 @@ class KPImage(PPImage):
                 di = destLineStartIndex
                 si = sourceLineStartIndex  # s_bi
                 for sourceX in range(0,int(self.brushImage.width)):
-                    sab = src[si + aOffset]  # brushThisPixelAlphaByte
-                    # brushThisPixelAlphaMultiplier:
+                    sab = src[si + aOffset]  # src_a_i
+                    # src_a:
                     a = sab/255.0
-                    # brushThisPixelInverseAlphaMultiplier:
+                    # src_inv_a:
                     ia = 1.0 - a
                     dab = self.data[di+aOffset]
                     da = dab/255.0
@@ -264,14 +262,14 @@ class KPImage(PPImage):
                         # sourceX * brushBuffer_byteDepth
                     if (sab != 0):
                         # calculate resulting alpha:
-                        # aTotalInt = dab
+                        # a_total_i = dab
                         # if sab > dab:
-                            # aTotalInt = sab
-                        aTotalInt = int(dab) + sab
-                        if aTotalInt>255:
-                            aTotalInt = 255
+                            # a_total_i = sab
+                        a_total_i = int(dab) + sab
+                        if a_total_i>255:
+                            a_total_i = 255
 
-                        # do alpha formula on colors (+.5 for rounding)
+                        # do alpha formula on colors
 
                         # account for dest (color transparent more):
                         # (from here down, 'a' affects color not alpha)
@@ -286,16 +284,16 @@ class KPImage(PPImage):
                         a = ia*a + a*da
                         ia = 1.0 - a
 
-                        # self.data[di+bOffset] = int(
+                        # self.data[di+bOffset] = int(round(
                             # ia*float(self.data[di+bOffset]) +
-                            # a*float(src[si+bOffset]) + .5 )
-                        # self.data[di+gOffset] = int(
+                            # a*float(src[si+bOffset])))
+                        # self.data[di+gOffset] = int(round(
                             # ia*float(self.data[di+gOffset]) +
-                            # a*float(src[si+gOffset]) + .5 )
-                        # self.data[di+rOffset] = int(
+                            # a*float(src[si+gOffset])))
+                        # self.data[di+rOffset] = int(round(
                             # ia*float(self.data[di+rOffset]) +
-                            # a*float(src[si+rOffset]) + .5)
-                        # self.data[di+aOffset] = aTotalInt
+                            # a*float(src[si+rOffset])))
+                        # self.data[di+aOffset] = a_total_i
 
                         res = [int( ia*float(self.data[di+bOffset]) +
                                     a*float(src[si+bOffset]) + .5 ),
@@ -303,8 +301,8 @@ class KPImage(PPImage):
                                     a*float(src[si+gOffset]) + .5 ),
                                int( ia*float(self.data[di+rOffset]) +
                                     a*float(src[si+rOffset]) + .5 ),
-                               aTotalInt]
-                        #brushBGRABytes = bytes(res)
+                               a_total_i]
+                        # brushBGRABytes = bytes(res)
                         self.data[di+bOffset] = res[0]
                         self.data[di+gOffset] = res[1]
                         self.data[di+rOffset] = res[2]
@@ -361,17 +359,31 @@ class KPImage(PPImage):
             color = vec4_from_vec3(color, 1.0)
         di = 0  # pixelByteIndex
         if (self.aOffset is not None):
-            for pixelIndex in range(0,self.width*self.height):
-                self.data[di+self.bOffset] = int( float(self.data[di+self.bOffset]) * color[source_bOffset] + .5 )  #+ .5 for rounding
-                self.data[di+self.gOffset] = int( float(self.data[di+self.gOffset]) * color[source_gOffset] + .5 )  #+ .5 for rounding
-                self.data[di+self.rOffset] = int( float(self.data[di+self.rOffset]) * color[source_rOffset] + .5 )  #+ .5 for rounding
-                self.data[di+self.aOffset] = int( float(self.data[di+self.aOffset]) * color[source_aOffset] + .5 )  #+ .5 for rounding
+            for pixelIndex in range(0,self.size[0]*self.[1]):
+                self.data[di+self.bOffset] = int(round(
+                    float(self.data[di+self.bOffset]) *
+                    color[source_bOffset]))
+                self.data[di+self.gOffset] = int(round(
+                    float(self.data[di+self.gOffset]) *
+                    color[source_gOffset]))
+                self.data[di+self.rOffset] = int(round(
+                    float(self.data[di+self.rOffset]) *
+                    color[source_rOffset]))
+                self.data[di+self.aOffset] = int(round(
+                    float(self.data[di+self.aOffset]) *
+                    color[source_aOffset]))
                 di += self.byteDepth
         elif (self.byteDepth==3):
-            for pixelIndex in range(0,self.width*self.height):
-                self.data[di+self.bOffset] = int( float(self.data[di+self.bOffset]) * color[source_bOffset] + .5 )  #+ .5 for rounding
-                self.data[di+self.gOffset] = int( float(self.data[di+self.gOffset]) * color[source_gOffset] + .5 )  #+ .5 for rounding
-                self.data[di+self.rOffset] = int( float(self.data[di+self.rOffset]) * color[source_rOffset] + .5 )  #+ .5 for rounding
+            for pixelIndex in range(0,self.size[0]*self.size[1]):
+                self.data[di+self.bOffset] = int(round(
+                    float(self.data[di+self.bOffset]) *
+                    color[source_bOffset]))
+                self.data[di+self.gOffset] = int(round(
+                    float(self.data[di+self.gOffset]) *
+                    color[source_gOffset]))
+                self.data[di+self.rOffset] = int(round(
+                    float(self.data[di+self.rOffset]) *
+                    color[source_rOffset]))
                 di += self.byteDepth
         else:
             print("Not yet implemented KVImage tintByColor where" +

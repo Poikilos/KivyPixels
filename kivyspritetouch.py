@@ -127,7 +127,7 @@ class PixelWidget(Widget):
         self.texture = self.fbo.texture
 
         self.viewImage = KPImage(self.fbo.size)
-        # self.viewImage.FillAllDestructivelyUsingColorBytes(0, 0, 0,
+        # self.viewImage.fill_icolor(0, 0, 0,
                                                            # 255)
         print("size:"+str(self.viewImage.size))
         # print("TOTALBYTECOUNT:"+str(self.TOTALBYTECOUNT))

@@ -8,9 +8,9 @@ class PPAnimationMetaFrame:
 
     def __init__(self):
         self.travel = (0.0,0.0)
-        #seconds = .0166 #60fps
-        self.seconds = .0333 #30fps default
-        self.index = 0 #index in a frame array
+        # seconds = .0166  # 60fps
+        self.seconds = .0333  # 30fps default
+        self.index = 0  # index in a frame array
         self.passedSeconds = 0.0
 
     def advanceByTime(self, relative_seconds):
@@ -78,9 +78,10 @@ class PPAnimation:
                 # currentFrame.seconds==0.0 (nonmoving frame)
                 break
 
+tau = math.pi * 2.0
+eighthOfTau = math.pi / 4.0
+
 class PPSpriteAbstract:
-    tau = math.pi * 2.0
-    eighthOfTau = math.pi / 4.0
 
     ANIM_Angle0 = 0
     ANIM_Angle45 = 10
@@ -111,36 +112,35 @@ class PPSpriteAbstract:
         return styleConstant + angleIndex + actionConstant
 
     def getAngleIndex_Deg(self, angleDegrees):
-        while angleDegrees < 0:
-            angleDegrees += 360
-        #while angleDegrees >= 360:
-        #    angleDegrees -= 360
+        angleDegrees %= 360
+        # NOTE: -361 % 360 is 359
         angleIndex = int((angleDegrees / 45.0) + .5)  # +.5 for rounding
-        while angleIndex > 7:
-            angleIndex -= 8
+        return angleIndex % 8
 
     def getAngleIndex_Rad(self, angleRadians):
-        while angleRadians < 0:
-            angleRadians += PPSpriteAbstract.tau
-        # while angleRadians >= PPSprite.tau:
-            # angleRadians -= PPSprite.tau
-        angleIndex = int((angleRadians / PPSpriteAbstract.eighthOfTau) +
-                         .5) #+.5 for rounding
+        angleRadians = math.fmod(angleRadians, tau)
+        # NOTE: math.fmod(-3, 2) is -1
+        if angleRadians < 0:
+            # minus negative is positive:
+            angleRadians += tau
+        angleIndex = int(
+            round((angleRadians / eighthOfTau)))
         while angleIndex > 7:
             angleIndex -= 8
+        return angleIndex
 
 class PPUnscaledSprite:
     sourceOriginalRect = None
     sourceCroppedRect = None
     destRenderRect = None
-    #offset within current animation:
+    # offset within current animation:
     frameOffset = None
 
     def __init__(self):
         # list of PPAnimations:
         self.animations = []
         self.animations.append(PPAnimation())
-        self.ANIM = 0 #PPSpriteAbstract.ANIM_Default
+        self.ANIM = 0  # PPSpriteAbstract.ANIM_Default
         self.images = []
         self.worldPos = (0.0,0.0)
         self.screenPos = (0.0,0.0)
@@ -175,10 +175,10 @@ class PPUnscaledSprite:
                           (screenRect.left + screenRect.width))
         if (pastRightCount>0):
             self.sourceCroppedRect.width -= pastRightCount
-        #if (self.sourceCroppedRect.width<0):
-        #    self.sourceCroppedRect.width = 0
-        #if (self.destRenderRect.width<0):
-        #    self.destRenderRect.width = 0
+        # if (self.sourceCroppedRect.width<0):
+        #     self.sourceCroppedRect.width = 0
+        # if (self.destRenderRect.width<0):
+        #     self.destRenderRect.width = 0
         # NOTE: for speed, let renderer deal with skipping
         # negative-sized sprites
 
@@ -213,7 +213,7 @@ class PPRect:
     def clamp(self, screenRect):
         # clamp self TO the given screenRect and return that copy of
         # self (like pygame.screenRect clamp)
-        itemRect = PPRect(self.top, self.left, self.width. self.height)
+        itemRect = PPRect(self.top, self.left, self.width, self.height)
 
         pastLeftCount = screenRect.left - itemRect.left
         if pastLeftCount > 0:
@@ -341,7 +341,7 @@ def bufferToTupleStyleString(data, start, count):
             returnString += str(data[index])
         else:
             returnString += "," + str(data[index])
-        #returnString+="@"+str(index)
+        # returnString += "@" + str(index)
     returnString += ")"
     return returnString
 
@@ -352,8 +352,8 @@ def range_copy_with_bo(self, destImage,
         arraySourceEndExByteIndex):
     sourceByteDepth = sourceImage.byteDepth
     destByteDepth = destImage.byteDepth
-    destArray = destImage.data
-    sourceArray = sourceImage.data
+    dst = destImage.data
+    src = sourceImage.data
     bOffset = sourceImage.bOffset
     gOffset = sourceImage.gOffset
     rOffset = sourceImage.rOffset
@@ -361,8 +361,8 @@ def range_copy_with_bo(self, destImage,
     maxByteDepth = destImage.byteDepth
     if (sourceImage.byteDepth < maxByteDepth):
         maxByteDepth = sourceImage.byteDepth
-    #if (sourceByteDepth == destByteDepth):
-        #if (sourceByteDepth == 4):
+    # if (sourceByteDepth == destByteDepth):
+        # if (sourceByteDepth == 4):
     sourceIndex = arraySourceStartByteIndex
     destIndex = arrayDestStartByteIndex
     destRegionByteCount = (arrayDestEndExByteIndex -
@@ -376,27 +376,27 @@ def range_copy_with_bo(self, destImage,
     minPixelCount = destRegionPixelCount
     if (sourceRegionPixelCount<minPixelCount):
         minPixelCount = sourceRegionPixelCount
-    #if (destRegionPixelCount<=sourceRegionPixelCount):
+    # if (destRegionPixelCount<=sourceRegionPixelCount):
     if (maxByteDepth>=4):
         for relativeIndex in range(0,minPixelCount):
-            destArray[destIndex + destImage.bOffset] = \
-                sourceArray[sourceIndex + bOffset]
-            destArray[destIndex + destImage.gOffset] = \
-                sourceArray[sourceIndex + gOffset]
-            destArray[destIndex + destImage.rOffset] = \
-                sourceArray[sourceIndex + rOffset]
-            destArray[destIndex + destImage.aOffset] = \
-                sourceArray[sourceIndex + aOffset]
+            dst[destIndex + destImage.bOffset] = \
+                src[sourceIndex + bOffset]
+            dst[destIndex + destImage.gOffset] = \
+                src[sourceIndex + gOffset]
+            dst[destIndex + destImage.rOffset] = \
+                src[sourceIndex + rOffset]
+            dst[destIndex + destImage.aOffset] = \
+                src[sourceIndex + aOffset]
             destIndex += destByteDepth
             sourceIndex += sourceByteDepth
     elif (maxByteDepth==3):
         for relativeIndex in range(0,minPixelCount):
-            destArray[destIndex + destImage.bOffset] = \
-                sourceArray[sourceIndex + bOffset]
-            destArray[destIndex + destImage.gOffset] = \
-                sourceArray[sourceIndex + gOffset]
-            destArray[destIndex + destImage.rOffset] = \
-                sourceArray[sourceIndex + rOffset]
+            dst[destIndex + destImage.bOffset] = \
+                src[sourceIndex + bOffset]
+            dst[destIndex + destImage.gOffset] = \
+                src[sourceIndex + gOffset]
+            dst[destIndex + destImage.rOffset] = \
+                src[sourceIndex + rOffset]
             destIndex += destByteDepth
             sourceIndex += sourceByteDepth
     elif (maxByteDepth==1):
@@ -407,29 +407,28 @@ def range_copy_with_bo(self, destImage,
         # offset by byteDepth-1 so that gray will be written to RGBA
         # image's alpha or vice versa
         for relativeIndex in range(0,minPixelCount):
-            # destArray[destIndex + destImage.bOffset] = \
-                # sourceArray[sourceIndex + bOffset]
-            destArray[destIndex] = sourceArray[sourceIndex]
+            # dst[destIndex + destImage.bOffset] = \
+                # src[sourceIndex + bOffset]
+            dst[destIndex] = src[sourceIndex]
             destIndex += destByteDepth
             sourceIndex += sourceByteDepth
     else:
         print("Not Yet Implemented in ")
 
 def set_at_from_fvec_with_bo(self,
-        destArray, destStride, destByteDepth, atX, atY, brushColor,
+        dst, destStride, destByteDepth, atX, atY, brushColor,
         bOffset, gOffset, rOffset, aOffset):
     xCenter = int(atX)
     yCenter = int(atY)
     pixelByteIndex = destStride*yCenter + xCenter*destByteDepth
-    #print ("pixelByteIndex:"+str(pixelByteIndex))
-    #print ("len(pixelBuffer):"+str(len(destArray)))
-    #print("writing bytes...")
-    destArray[pixelByteIndex + bOffset] = int(brushColor.b*255.0+.5)
-    destArray[pixelByteIndex + gOffset] = int(brushColor.g*255.0+.5)
-    destArray[pixelByteIndex + rOffset] = int(brushColor.r*255.0+.5)
+    # print ("pixelByteIndex:" + str(pixelByteIndex))
+    # print ("len(pixelBuffer):" + str(len(dst)))
+    # print("writing bytes...")
+    dst[pixelByteIndex + bOffset] = int(round(brushColor.b*255.0))
+    dst[pixelByteIndex + gOffset] = int(round(brushColor.g*255.0))
+    dst[pixelByteIndex + rOffset] = int(round(brushColor.r*255.0))
     if (aOffset is not None) and (aOffset<self.byteDepth):
-        destArray[pixelByteIndex + aOffset] = int(brushColor.a *
-                                                  255.0 + .5)
+        dst[pixelByteIndex + aOffset] = int(round(brushColor.a*255.0)
 
 # static_DrawToArray_ToTopLeft_LineCopy_FillRestWithTransparent
 def blit_copy(self, input_buffer, input_stride,
@@ -437,19 +436,20 @@ def blit_copy(self, input_buffer, input_stride,
     IsToFillRestWithZeroes = True
     if self.byteDepth == input_byteDepth:
         dl_zeroes = None  # destLineOfZeroes
-        if (input_height<self.height):
+        if (input_height<self.size[1]):
             dl_zeroes = bytearray(self.stride)
         if (input_width==self.width):
             d_lpi = 0
             s_lpi = 0
-            for destY in range(0,self.height):
+            for destY in range(0,self.size[1]):
                 d_nlpi = d_lpi + self.stride
-                NextSourceLinePixelIndex = s_lpi + input_stride
+                # NextSourceLinePixelIndex:
+                s_nlpi = s_lpi + input_stride
                 if (destY<input_height):
                     # NOTE: width difference is already handled in outer
                     # "if" statement, for speed.
                     self.data[d_lpi:d_nlpi] = input_buffer[
-                        s_lpi:NextSourceLinePixelIndex]
+                        s_lpi:s_nlpi]
                 elif IsToFillRestWithZeroes:
                     self.data[d_lpi:d_nlpi] = dl_zeroes[:]
                 else:
@@ -459,9 +459,9 @@ def blit_copy(self, input_buffer, input_stride,
         elif (input_width>self.width):
             d_lpi = 0
             s_lpi = 0
-            for destY in range(0,self.height):
+            for destY in range(0, self.size[1]):
                 d_nlpi = d_lpi + self.stride
-                # NextSourceLinePixelIndex = s_lpi + input_stride
+                # s_nlpi = s_lpi + input_stride
                 s_nlpi_ltd = s_lpi + self.stride
                 # intentionally self.stride, to limit how much to get
                 if (destY<input_height):
@@ -480,19 +480,19 @@ def blit_copy(self, input_buffer, input_stride,
             s_lpi = 0
             # PartialDestLineOfZeroes:
             pdl_zeroes = bytearray(self.stride-input_stride)
-            for destY in range(0,self.height):
+            for destY in range(0, self.size[1]):
                 d_nlpi = d_lpi + self.stride
                 d_nlpi_ltd = d_lpi + input_stride
                 # intentially input stride to limit self stride since
                 #     # source is smaller
-                NextSourceLinePixelIndex = s_lpi + input_stride
+                s_nlpi = s_lpi + input_stride
                 # s_nlpi_ltd = s_lpi + self.stride
                 #     # intentionally self.stride, to limit what to get
                 if (destY<input_height):
                     # NOTE: width difference is already handled in outer
                     # "if" statement, for speed.
                     self.data[d_lpi:d_nlpi_ltd] = input_buffer[
-                        s_lpi:NextSourceLinePixelIndex]
+                        s_lpi:s_nlpi]
                     if IsToFillRestWithZeroes:
                         self.data[d_nlpi_ltd:d_nlpi] = pdl_zeroes[:]
                 elif IsToFillRestWithZeroes:
@@ -638,9 +638,9 @@ class PPImage:
     def set_ivec3_at(self, vec2, rgb_bytes):
         # destPixelByteIndex:
         d_p_bi = self.stride*vec2[1] + vec2[0]*self.byteDepth
-        # destArray[d_p_bi + self.bOffset] = int(color.b*255.0+.5)
-        # destArray[d_p_bi + self.gOffset] = int(color.g*255.0+.5)
-        # destArray[d_p_bi + self.rOffset] = int(color.r*255.0+.5)
+        # dst[d_p_bi + self.bOffset] = int(color.b*255.0+.5)
+        # dst[d_p_bi + self.gOffset] = int(color.g*255.0+.5)
+        # dst[d_p_bi + self.rOffset] = int(color.r*255.0+.5)
         self.data[d_p_bi + self.bOffset] = int(rgb_bytes[2]*255.0+.5)
         self.data[d_p_bi + self.gOffset] = int(rgb_bytes[1]*255.0+.5)
         self.data[d_p_bi + self.rOffset] = int(rgb_bytes[0]*255.0+.5)
@@ -691,32 +691,34 @@ class PPImage:
         return returnMax
 
     def FillAllDestructivelyUsingByteColor(self, brushByteColor):
-        self.FillAllDestructivelyUsingColorBytes(brushByteColor.getR(),
+        self.fill_icolor(brushByteColor.getR(),
             brushByteColor.getG(), brushByteColor.getB(),
             brushByteColor.getA())
 
-    def FillAllDestructivelyUsingColorBytes(self, setRByte, setGByte,
+    # formerly FillAllDestructivelyUsingColorBytess
+    def fill_icolor(self, setRByte, setGByte,
             setBByte, setAByte):
         d_bi = 0
         d_lbi = d_bi
         setBytes = bytes([setBByte, setGByte, setRByte, setAByte])
+        dst = self.data
         for thisY in range(0,self.size[1]):
             d_bi = d_lbi
             for thisX in range(0,self.size[0]):
-                self.data[d_bi+self.bOffset] = setBytes[0]
-                self.data[d_bi+self.gOffset] = setBytes[1]
-                self.data[d_bi+self.rOffset] = setBytes[2]
-                self.data[d_bi+self.aOffset] = setBytes[3]
+                dst[d_bi+self.bOffset] = setBytes[0]
+                dst[d_bi+self.gOffset] = setBytes[1]
+                dst[d_bi+self.rOffset] = setBytes[2]
+                dst[d_bi+self.aOffset] = setBytes[3]
                 d_bi += self.byteDepth
             d_lbi += self.stride
     def blit_copy_with_bo(self, input_buffer, input_stride,
-            input_byteDepth, input_width, input_height, input_bOffset,
+            input_byteDepth, input_size, input_bOffset,
             input_gOffset, input_rOffset, input_aOffset):
         # this is much like LineCopy version, except instead of using
         # python array slicing it uses static_range_copy_with_bo
         input_stride = int(input_stride)
-        input_width = int(input_width)
-        input_height = int(input_height)
+        input_width = int(input_size[0])
+        input_height = int(input_size[1])
         input_byteDepth = int(input_byteDepth)
         IsToFillRestWithZeroes = True
         d_bi = 0
@@ -736,7 +738,7 @@ class PPImage:
         if (self.byteDepth>=3 and
                 (input_byteDepth>=3 or input_byteDepth==1)):
             dl_zeroes = None
-            if (input_height<self.height):
+            if (input_height<self.size[1]):
                 dl_zeroes = bytearray(self.stride)
             if (input_width==self.size[0]):
                 d_lpi = 0  # dest line pixel index
@@ -746,7 +748,7 @@ class PPImage:
                     s_bi = s_lpi
                     d_nlpi = d_lpi + self.stride
                         # NextDestLinePixelIndex
-                    # NextSourceLinePixelIndex = (s_lpi +
+                    # s_nlpi = (s_lpi +
                     #                             input_stride)
                     if (destY<input_height):
                         # NOTE: width difference is already handled in
@@ -754,12 +756,12 @@ class PPImage:
                         # self.data[d_lpi:
                         #           d_nlpi] = \
                         #     input_buffer[s_lpi:
-                        #                  NextSourceLinePixelIndex]
+                        #                  s_nlpi]
                         # range_copy_with_bo(self.data,
                         #     d_lpi,
                         #     d_nlpi,
                         #     input_buffer, s_lpi,
-                        #     NextSourceLinePixelIndex, input_bOffset,
+                        #     s_nlpi, input_bOffset,
                         #     input_gOffset, input_rOffset,
                         #     input_aOffset)
                         if (self.byteDepth==3):
@@ -809,9 +811,9 @@ class PPImage:
             elif (input_width > self.size[0]):
                 d_lpi = 0
                 s_lpi = 0
-                for destY in range(0,self.height):
+                for destY in range(0, self.size[1]):
                     d_nlpi = d_lpi + self.stride
-                    # NextSourceLinePixelIndex = (s_lpi +
+                    # s_nlpi = (s_lpi +
                     #                             input_stride)
                     # NextSourceLinePixelIndexLIMITED:
                     s_nlpi_ltd = s_lpi + self.stride
@@ -837,13 +839,13 @@ class PPImage:
                 d_lpi = 0  # dest line pixel index
                 s_lpi = 0
                 pdl_zeroes = bytearray(self.stride-input_stride)
-                for destY in range(0,self.height):
+                for destY in range(0, self.size[1]):
                     d_nlpi = d_lpi + self.stride
                     # NextDestLinePixelIndexLIMITED:
                     d_nlpi_ltd = d_lpi + input_stride
                         # intentially input stride to limit self stride
                         # since source is smaller
-                    NextSourceLinePixelIndex = s_lpi + input_stride
+                    s_nlpi = s_lpi + input_stride
                     # s_nlpi_ltd = \
                     #     s_lpi + self.stride
                     # intentionally self.stride, to limit what to get
@@ -853,12 +855,12 @@ class PPImage:
                         # self.data[d_lpi:
                         #           d_nlpi_ltd] = \
                         #     input_buffer[s_lpi:
-                        #                  NextSourceLinePixelIndex]
+                        #                  s_nlpi]
                         range_copy_with_bo(self.data,
                             d_lpi,
                             d_nlpi_ltd,
                             input_buffer, s_lpi,
-                            NextSourceLinePixelIndex, input_bOffset,
+                            s_nlpi, input_bOffset,
                             input_gOffset, input_rOffset, input_aOffset)
                         if IsToFillRestWithZeroes:
                             self.data[d_nlpi_ltd:d_nlpi] = pdl_zeroes[:]
