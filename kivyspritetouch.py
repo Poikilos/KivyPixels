@@ -126,12 +126,10 @@ class PixelWidget(Widget):
         # texture
         self.texture = self.fbo.texture
 
-        self.viewImage = KPImage(self.fbo.size,
-                                 KPImage.defaultByteDepth)
+        self.viewImage = KPImage(self.fbo.size)
         # self.viewImage.FillAllDestructivelyUsingColorBytes(0, 0, 0,
                                                            # 255)
-        print("width:"+str(self.viewImage.width))
-        print("height:"+str(self.viewImage.height))
+        print("size:"+str(self.viewImage.size))
         # print("TOTALBYTECOUNT:"+str(self.TOTALBYTECOUNT))
         # print("TOTALPIXELCOUNT:"+str(self.TOTALPIXELCOUNT))
         self.viewImage.setBrushPath("brush2.png")
@@ -219,16 +217,15 @@ class PixelWidget(Widget):
     def updatePixelViewSize(self):
         if ((self.fbo.size[0]!=self.viewImage.width) or
                 (self.fbo.size[1]!=self.viewImage.height)):
-            newKPImage = KPImage(self.fbo.size,
-                                 KPImage.defaultByteDepth)
+            newKPImage = KPImage(self.fbo.size)
             newKPImage.blit_copy(self.viewImage)
             newKPImage.copyRuntimeVarsByRefFrom(self.viewImage)
             self.viewImage = newKPImage
 
             print("width:"+str(self.viewImage.width))
             print("height:"+str(self.viewImage.height))
-            #print("TOTALBYTECOUNT:"+str(self.TOTALBYTECOUNT))
-            #print("TOTALPIXELCOUNT:"+str(self.TOTALPIXELCOUNT))
+            # print("TOTALBYTECOUNT:"+str(self.TOTALBYTECOUNT))
+            # print("TOTALPIXELCOUNT:"+str(self.TOTALPIXELCOUNT))
 
     def on_size(self, instance, value):
         self.fbo.size = value
@@ -238,10 +235,10 @@ class PixelWidget(Widget):
         if (self.saveButton is not None):
             self.saveButton.width=self.fbo_rect.size[0]/5
             self.saveButton.height=self.fbo_rect.size[1]/10
-        #if (self.brushImage is not None):
-        #    pass
-            #self.brushImage.width=self.fbo_rect.size[0]/10
-            #self.brushImage.height=self.brushImage.width
+        # if (self.brushImage is not None):
+        #     pass
+            # self.brushImage.width=self.fbo_rect.size[0]/10
+            # self.brushImage.height=self.brushImage.width
         self.updatePixelViewSize()
         self.uploadBufferToTexture()
 

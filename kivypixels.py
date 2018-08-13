@@ -6,10 +6,40 @@ import os
 
 from pythonpixels import bufferToTupleStyleString
 
+# formerly static_createFromImageFile
+def load_image(self,fileName):
+    returnKVI = None
+    if os.path.exists(fileName):
+        newSurface = pygame.image.load(fileName)
+        returnKVI = KPImage(newSurface.get_size())
+        data = pygame.image.tostring(newSurface, 'RGBA', False)
+        # blit_copy_with_bo(self, inputArray, inputStride,
+                          # inputByteDepth, inputWidth, inputHeight,
+                          # bOffset, gOffset, rOffset, aOffset):
+
+        newSurface_byteDepth = newSurface.get_bytesize()
+            # int(newSurface.get_bitsize()/8)
+        newSurface_stride = newSurface.get_pitch()
+            # newSurface.get_width() * newSurface_byteDepth
+        bOffset = 0
+        gOffset = 1
+        rOffset = 2
+        aOffset = 3
+        returnKVI.blit_copy_with_bo(data, newSurface_stride,
+                                    newSurface_byteDepth,
+                                    newSurface.get_width(),
+                                    newSurface.get_height(),
+                                    bOffset, gOffset, rOffset,
+                                    aOffset)
+    else:
+        print("ERROR in kivypixels.load_image:" +
+              " file '" + fileName + "' does not exist")
+    return returnKVI
+
 class KPImage(PPImage):
 
-    def __init__(self, size, byte_depth):
-        super(KPImage, self).__init__(size, byte_depth)
+    def __init__(self, size, byte_depth=4):
+        super(KPImage, self).__init__(size, byte_depth=4)
         self.brushFileName = None
         self.brushOriginalImage = None  # no scale, no color
         self._brush_color = (1.0, 1.0, 1.0, 1.0)
@@ -40,13 +70,12 @@ class KPImage(PPImage):
     def setBrushPath(self, path):
         if os.path.isfile(path):
             self.brushFileName = path
-            self.brushOriginalImage = \
-                KPImage.static_createFromImageFile(self, path)
+            self.brushOriginalImage = load_image(self, path)
             print("loading brush '" + path + "'")
             if self.brushOriginalImage is not None:
                 self.brushImage = KPImage(
                     self.brushOriginalImage.get_size(),
-                    self.brushOriginalImage.byteDepth)
+                    byte_depth=self.brushOriginalImage.byteDepth)
             else:
                 raise ValueError("self.brushOriginalImage could not"
                                  " be loaded in setBrushPath")
@@ -54,40 +83,10 @@ class KPImage(PPImage):
             print("ERROR in setBrushPath: missing " + path +
                   "'")
 
-    def static_createFromImageFile(self,fileName):
-        returnKVI = None
-        if os.path.exists(fileName):
-            newSurface = pygame.image.load(fileName)
-            returnKVI = KPImage(newSurface.get_size(),
-                                KPImage.defaultByteDepth)
-            data = pygame.image.tostring(newSurface, 'RGBA', False)
-            # blit_copy_with_bo(self, inputArray, inputStride,
-                              # inputByteDepth, inputWidth, inputHeight,
-                              # bOffset, gOffset, rOffset, aOffset):
-
-            newSurface_byteDepth = newSurface.get_bytesize()
-                # int(newSurface.get_bitsize()/8)
-            newSurface_stride = newSurface.get_pitch()
-                # newSurface.get_width() * newSurface_byteDepth
-            bOffset = 0
-            gOffset = 1
-            rOffset = 2
-            aOffset = 3
-            returnKVI.blit_copy_with_bo(data, newSurface_stride,
-                                        newSurface_byteDepth,
-                                        newSurface.get_width(),
-                                        newSurface.get_height(),
-                                        bOffset, gOffset, rOffset,
-                                        aOffset)
-        else:
-            print("ERROR in KivyPixels.static_createFromImageFile:" +
-                  " file '" + fileName + "' does not exist")
-        return returnKVI
-
     def load(self, fileName):
         self.lastUsedFileName = fileName
         newSurface = pygame.image.load(fileName)
-        self.init(newSurface.get_size(), KPImage.defaultByteDepth)
+        self.init(newSurface.get_size())
         data = pygame.image.tostring(newSurface, 'RGBA', False)
         # blit_copy_with_bo(self, inputArray, inputStride,
                           # inputByteDepth, inputWidth, inputHeight,
@@ -133,7 +132,7 @@ class KPImage(PPImage):
                 # print("self.getMaxAlphaValue():" +
                       # str(self.getMaxAlphaValue()))
             translatedImage = KPImage((self.width, self.height),
-                                      self.byteDepth)
+                                      byte_depth=self.byteDepth)
 
 
             # Kivy 1.8.0 channel offsets are:
@@ -229,7 +228,7 @@ class KPImage(PPImage):
         # brushBuffer_stride = int(self.brushImage.width) *
                              # brushBuffer_byteDepth
         src = self.brushImage.data  # self.brushPixels
-        # destByteIndex:
+        # d_bi:
         di = destY * self.stride + destX * self.byteDepth
         destLineStartIndex = di
         if self.debugEnabled:
@@ -243,7 +242,7 @@ class KPImage(PPImage):
             print("brushImage.stride:" + str(self.brushImage.stride))
             print("self.stride:" + str(self.stride))
             print("self.byteDepth:" + str(self.byteDepth))
-            print("destByteIndex:" + str(di))
+            print("d_bi:" + str(di))
 
         sourceLineStartIndex = 0
         debugPixelWriteCount = 0
@@ -251,7 +250,7 @@ class KPImage(PPImage):
             for sourceY in range(0,int(self.brushImage.height)):
                 #destX = destLineStartX
                 di = destLineStartIndex
-                si = sourceLineStartIndex  # sourceByteIndex
+                si = sourceLineStartIndex  # s_bi
                 for sourceX in range(0,int(self.brushImage.width)):
                     sab = src[si + aOffset]  # brushThisPixelAlphaByte
                     # brushThisPixelAlphaMultiplier:
@@ -321,8 +320,8 @@ class KPImage(PPImage):
         #except:
         except Exception as e:
             print("Could not finish brushAt: "+str(e))
-            print("    destByteIndex:" + str(di) +
-                  "; sourceByteIndex:" + str(si) +
+            print("    d_bi:" + str(di) +
+                  "; s_bi:" + str(si) +
                   "; len(self.data):" + str(len(self.data)) +
                   "; len(brushPixels):" + str(len(src)))
          # if (debugColor is not None):
