@@ -215,17 +215,16 @@ class PixelWidget(Widget):
         # self.canvas = canvas
 
     def updatePixelViewSize(self):
-        if ((self.fbo.size[0]!=self.viewImage.width) or
-                (self.fbo.size[1]!=self.viewImage.height)):
+        if ((self.fbo.size[0]!=self.viewImage.size[0]) or
+                (self.fbo.size[1]!=self.viewImage.size[1])):
             newKPImage = KPImage(self.fbo.size)
             newKPImage.blit_copy(self.viewImage)
             newKPImage.copyRuntimeVarsByRefFrom(self.viewImage)
             self.viewImage = newKPImage
 
-            print("width:"+str(self.viewImage.width))
-            print("height:"+str(self.viewImage.height))
-            # print("TOTALBYTECOUNT:"+str(self.TOTALBYTECOUNT))
-            # print("TOTALPIXELCOUNT:"+str(self.TOTALPIXELCOUNT))
+            print("size:" + str(self.viewImage.size))
+            # print("TOTALBYTECOUNT:" + str(self.TOTALBYTECOUNT))
+            # print("TOTALPIXELCOUNT:" + str(self.TOTALPIXELCOUNT))
 
     def on_size(self, instance, value):
         self.fbo.size = value
