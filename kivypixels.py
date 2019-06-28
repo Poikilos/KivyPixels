@@ -37,8 +37,8 @@ def load_image(self,fileName):
 
 class KPImage(PPImage):
 
-    def __init__(self, size, byte_depth=4):
-        super(KPImage, self).__init__(size, byte_depth=4)
+    def __init__(self, size, byteDepth=4):
+        super(KPImage, self).__init__(size, byteDepth=4)
         self.brushFileName = None
         self.brushOriginalImage = None  # no scale, no color
         self._brush_color = (1.0, 1.0, 1.0, 1.0)
@@ -74,7 +74,7 @@ class KPImage(PPImage):
             if self.brushOriginalImage is not None:
                 self.brushImage = KPImage(
                     self.brushOriginalImage.get_size(),
-                    byte_depth=self.brushOriginalImage.byte_depth)
+                    byteDepth=self.brushOriginalImage.byteDepth)
             else:
                 raise ValueError("self.brushOriginalImage could not"
                                  " be loaded in setBrushPath")
@@ -122,7 +122,7 @@ class KPImage(PPImage):
                                            # bOffset, gOffset, rOffset,
                                            # aOffset)
         try:
-            if (self.debugEnabled):
+            if (self.enableDebug):
                 print("self.size:"+str(self.size))
                 print("len(self.data):"+str(len(self.data)))
                 # print("self.getMaxChannelValueNotIncludingAlpha():" +
@@ -130,7 +130,7 @@ class KPImage(PPImage):
                 # print("self.getMaxAlphaValue():" +
                       # str(self.getMaxAlphaValue()))
             translatedImage = KPImage(self.size,
-                                      byte_depth=self.byte_depth)
+                                      byteDepth=self.byteDepth)
 
 
             # Kivy 1.8.0 channel offsets are:
@@ -155,7 +155,7 @@ class KPImage(PPImage):
             # is not at fault for channel order issue, and has correct
             # channel order
             translatedImage.blit_copy_with_bo(self.data, self.stride,
-                                              self.byte_depth,
+                                              self.byteDepth,
                                               self.size,
                                               self.bOffset,
                                               self.gOffset,
@@ -163,18 +163,18 @@ class KPImage(PPImage):
                                               self.aOffset)
             data = bytes(translatedImage.data)  # convert from bytearray
                                                 # to bytes
-            if (self.debugEnabled):
+            if (self.enableDebug):
                 debugX = 3
                 debugY = self.height - 3
                 if (debugX>=self.width):
                     debugX=self.width-1
                 if (debugY>=self.height):
                     debugY=self.height-1
-                debugIndex = debugY*self.stride + debugX*self.byte_depth
+                debugIndex = debugY*self.stride + debugX*self.byteDepth
                 print("debug pixel at (" + str(debugX) + "," +
                       str(debugY) + "): " +
                       bufferToTupleStyleString(data, debugIndex,
-                      self.byte_depth)
+                      self.byteDepth)
                 )
             surface = pygame.image.fromstring(data, self.size, 'RGBA',
                                               True)
@@ -230,17 +230,17 @@ class KPImage(PPImage):
                              # brushBuffer_byteDepth
         src = self.brushImage.data  # self.brushPixels
         # d_bi:
-        di = destY * self.stride + destX * self.byte_depth
+        di = destY * self.stride + destX * self.byteDepth
         destLineStartIndex = di
-        if self.debugEnabled:
+        if self.enableDebug:
             print()
             print("self.brushImage.size:" +
                   str(self.brushImage.size))
-            print("brushImage.byte_depth:" +
-                  str(self.brushImage.byte_depth))
+            print("brushImage.byteDepth:" +
+                  str(self.brushImage.byteDepth))
             print("brushImage.stride:" + str(self.brushImage.stride))
             print("self.stride:" + str(self.stride))
-            print("self.byte_depth:" + str(self.byte_depth))
+            print("self.byteDepth:" + str(self.byteDepth))
             print("d_bi:" + str(di))
 
         sourceLineStartIndex = 0
@@ -311,8 +311,8 @@ class KPImage(PPImage):
 
                         debugPixelWriteCount += 1
                     #destX += 1
-                    di += self.byte_depth
-                    si += self.brushImage.byte_depth
+                    di += self.byteDepth
+                    si += self.brushImage.byteDepth
                 #destY += 1
                 destLineStartIndex += self.stride
                 sourceLineStartIndex += self.brushImage.stride
@@ -343,7 +343,7 @@ class KPImage(PPImage):
         # # brushRect = Rectangle(source=self.brushFileName,
                               # # pos=(touch.x,touch.y), size=(16,16))
         # self.fbo.add(brushRect)
-        if self.debugEnabled:
+        if self.enableDebug:
             print("debugPixelWriteCount:"+str(debugPixelWriteCount))
 
     def tintByColor(self, color):
@@ -373,8 +373,8 @@ class KPImage(PPImage):
                 self.data[di+self.aOffset] = int(round(
                     float(self.data[di+self.aOffset]) *
                     color[source_aOffset]))
-                di += self.byte_depth
-        elif (self.byte_depth==3):
+                di += self.byteDepth
+        elif (self.byteDepth==3):
             for pixelIndex in range(0,self.size[0]*self.size[1]):
                 self.data[di+self.bOffset] = int(round(
                     float(self.data[di+self.bOffset]) *
@@ -385,10 +385,10 @@ class KPImage(PPImage):
                 self.data[di+self.rOffset] = int(round(
                     float(self.data[di+self.rOffset]) *
                     color[source_rOffset]))
-                di += self.byte_depth
+                di += self.byteDepth
         else:
             print("Not yet implemented KVImage tintByColor where" +
-                  " self.byte_depth=" + str(self.byte_depth))
+                  " self.byteDepth=" + str(self.byteDepth))
 
 if __name__ == "__main__":
     print("This module should be imported by your program.")
@@ -400,15 +400,15 @@ if __name__ == "__main__":
     print("  src_img: " + str(src_img.get_dict(data_enable=False)))
     print("  dst_img: " + str(dst_img.get_dict(data_enable=False)))
     dst_img.blit_copy_with_bo(src_img.data, src_img.stride,
-        src_img.byte_depth, src_img.size, src_img.bOffset,
+        src_img.byteDepth, src_img.size, src_img.bOffset,
         src_img.gOffset, src_img.rOffset, src_img.aOffset)
     print("blit_copy_with_bo grayscale...")
-    src_img = KPImage(size, byte_depth=1)
-    dst_img = KPImage(size, byte_depth=1)
+    src_img = KPImage(size, byteDepth=1)
+    dst_img = KPImage(size, byteDepth=1)
     print("  src_img: " + str(src_img.get_dict(data_enable=False)))
     print("  dst_img: " + str(dst_img.get_dict(data_enable=False)))
     dst_img.blit_copy_with_bo(src_img.data, src_img.stride,
-        src_img.byte_depth, src_img.size, src_img.bOffset,
+        src_img.byteDepth, src_img.size, src_img.bOffset,
         src_img.gOffset, src_img.rOffset, src_img.aOffset)
     print("  done testing kivypixels.")
 

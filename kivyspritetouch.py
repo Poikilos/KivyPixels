@@ -1,4 +1,3 @@
-
 '''
 KivySpriteTouch
 ==========
@@ -90,23 +89,23 @@ from kivypixels import KPImage
 from pythonpixels import vec4_from_vec3, bgr_from_hex
 
 class PixelWidget(Widget):
-    debugEnabled = False
+    enableDebug = False
     texture = ObjectProperty(None, allownone=True)
     alpha = NumericProperty(1)
     viewImage = None
-    #TOTALBYTECOUNT = None
-    #TOTALPIXELCOUNT = None
-    #STRIDE = None
-    #viewImage = None
-    #assumed_fbo_byteDepth = 4
-    #assumed_fbo_stride = None
+    # TOTALBYTECOUNT = None
+    # TOTALPIXELCOUNT = None
+    # STRIDE = None
+    # viewImage = None
+    # assumed_fbo_byteDepth = 4
+    # assumed_fbo_stride = None
 
-    #brushFboWidgetSimple = None
+    # brushFboWidgetSimple = None
 
     saveButton = None
 
     brushPaletteIndex = None
-    #brushFileName = "brushTrianglePointingDown-25percent.png"
+    # brushFileName = "brushTrianglePointingDown-25percent.png"
 
     paletteWidget = None
 
@@ -181,7 +180,6 @@ class PixelWidget(Widget):
         # self.brushFboWidgetSimple.fbo.add(brushFboRectangle)
 
 
-
         # self.texture = Texture.create(size=(512, 512),
                                       # colorfmt='RGBA',
                                       # bufferfmt='ubyte')
@@ -191,10 +189,8 @@ class PixelWidget(Widget):
         # self.populate_texture(self.texture)
         # self.populate_texture(self.fbo.texture)
 
-
     # def populate_texture(self, texture):
         # texture.blit_buffer(bytes(self.viewImage.data))
-
 
     # def fbo_populate_texture(self, texture):
         # texture.blit_buffer(bytes(self.viewImage.data))
@@ -290,10 +286,15 @@ class PixelWidget(Widget):
     def onSaveButtonClick(self,instance):
         # see C:\Kivy-1.8.0-py3.3-win32\kivy\kivy\tests\test_graphics.py
         # data = self.fbo.pixels
-        # saveFileName = "Untitled1.png"
-        self.viewImage.saveAs("Untitled1.png")
-        if self.debugEnabled:
-            self.brushImage.saveAs("debug-save-brush.png")
+        saveFileName = "Untitled1.png"
+        index = 1
+        while os.path.isfile(saveFileName):
+            index += 1
+            saveFileName = "Untitled"+str(index)+".png"
+        self.viewImage.saveAs(saveFileName)
+        if self.enableDebug:
+            if self.brushImage is not None:
+                self.brushImage.saveAs("debug-save-brush.png")
 
     def onColorButtonClick(self,instance):
         self.paletteWidget.open()

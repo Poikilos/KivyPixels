@@ -99,4 +99,6 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
-/Untitled1.png
+/err.txt
+/Untitled*.png
+/out.txt

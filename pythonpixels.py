@@ -1,9 +1,11 @@
 import math
 
+
 def is_sequence(arg):
     return (not hasattr(arg, "strip") and
             hasattr(arg, "__getitem__") or
             hasattr(arg, "__iter__"))
+
 
 class PPAnimationMetaFrame:
     travel = None
@@ -42,6 +44,7 @@ class PPAnimationMetaFrame:
         else:
             returnFinished = False
         return returnFinished
+
 
 # PPAnimation is ONLY a list of indeces (metaframe objects)--
 # Sprite stores actual images
@@ -83,8 +86,10 @@ class PPAnimation:
                 # currentFrame.seconds==0.0 (nonmoving frame)
                 break
 
+
 tau = math.pi * 2.0
 eighthOfTau = math.pi / 4.0
+
 
 class PPSpriteAbstract:
 
@@ -135,6 +140,7 @@ class PPSpriteAbstract:
             angleIndex -= 8
         return angleIndex
 
+
 class PPUnscaledSprite:
     sourceOriginalRect = None
     sourceCroppedRect = None
@@ -151,11 +157,14 @@ class PPUnscaledSprite:
         self.worldPos = (0.0,0.0)
         self.screenPos = (0.0,0.0)
 
+
     def getImageIndex(self):
         return self.animations(self.ANIM).getFrameIndex()
 
+
     def addFrame(self, newPPImage):
         self.images.append(newPPImage)
+
 
     # uses screenPos to calculate destRenderRect (cropped) and
     # sourceCroppedRect
@@ -218,7 +227,7 @@ class PPRect:
 
     def clamp_ip(self, screenRect):
         # clamp self TO the given screenRect and return that copy of
-        # self (like pygame.screenRect clamp)
+        # self (like pygame.screenRect clamp_ip)
         itemRect = PPRect(self.left, self.top, self.width, self.height)
 
         pastLeftCount = screenRect.left - itemRect.left
@@ -245,10 +254,12 @@ class PPRect:
 
         return itemRect
 
+
 hex_ints = {'0':0,   '1':1, '2':2,  '3':3,
             '4':4,   '5':5, '6':6,  '7':7,
             '8':8,   '9':9, 'A':10, 'B':11,
             'C':12, 'D':13, 'E':14, 'F':15}
+
 
 def hex2_int(svec2):
     ret = None
@@ -259,8 +270,10 @@ def hex2_int(svec2):
               " (should be 2)")
     return ret
 
+
 def vec4_from_vec3(vec3, fourth):
     return vec3[0], vec3[1], vec3[2], fourth
+
 
 def vec3_from_hex(hexString):
     if hexString[0] == "#":
@@ -283,17 +296,21 @@ def vec3_from_hex(hexString):
         print("hexString has bad format: " + str(hexString))
     return ret
 
+
 def vec3_div(vec, divisor):
     return vec[0]/divisor, vec[1]/divisor, vec[2]/divisor
+
 
 def bgr_from_hex(hexString):
     rgb = vec3_from_hex(hexString)
     # divide all 3 by 255:
     return vec3_div((rgb[2], rgb[1], rgb[0]), 255.0)
 
+
 def rgb_from_hex(hexString):
     # divide all 3 by 255:
     return vec3_div(vec3_from_hex(hexString), 255.0)
+
 
 class PPColor:
 
@@ -302,7 +319,7 @@ class PPColor:
         self.gOffset = 1
         self.rOffset = 2
         self.aOffset = 3
-        self.byte_depth = 4
+        self.byteDepth = 4
         self.channels = bytearray([0,0,0,255])
 
     def getA(self):
@@ -339,6 +356,7 @@ class PPColor:
         if self.aOffset is not None:
             self.channels[self.aOffset] = b''+a
 
+
 def bufferToTupleStyleString(data, start, count):
     openerString = "("
     returnString = openerString
@@ -351,22 +369,22 @@ def bufferToTupleStyleString(data, start, count):
     returnString += ")"
     return returnString
 
-# formerly static_PixelFill_CustomByteOrders
+
 def range_copy_with_bo(destImage,
         arrayDestStartByteIndex, arrayDestEndExByteIndex,
-        sourceImage, arraySourceStartByteIndex,
+        srcImage, arraySourceStartByteIndex,
         arraySourceEndExByteIndex):
-    sourceByteDepth = sourceImage.byte_depth
-    destByteDepth = destImage.byte_depth
+    sourceByteDepth = srcImage.byteDepth
+    destByteDepth = destImage.byteDepth
     dst = destImage.data
-    src = sourceImage.data
-    bOffset = sourceImage.bOffset
-    gOffset = sourceImage.gOffset
-    rOffset = sourceImage.rOffset
-    aOffset = sourceImage.aOffset
-    maxByteDepth = destImage.byte_depth
-    if (sourceImage.byte_depth < maxByteDepth):
-        maxByteDepth = sourceImage.byte_depth
+    src = srcImage.data
+    bOffset = srcImage.bOffset
+    gOffset = srcImage.gOffset
+    rOffset = srcImage.rOffset
+    aOffset = srcImage.aOffset
+    maxByteDepth = destImage.byteDepth
+    if (srcImage.byteDepth < maxByteDepth):
+        maxByteDepth = srcImage.byteDepth
     # if (sourceByteDepth == destByteDepth):
         # if (sourceByteDepth == 4):
     sourceIndex = arraySourceStartByteIndex
@@ -410,7 +428,7 @@ def range_copy_with_bo(destImage,
         sourceLastByte = sourceByteDepth - 1
         destIndex += destLastByte
         sourceIndex += sourceLastByte
-        # offset by byte_depth-1 so that gray will be written to RGBA
+        # offset by byteDepth-1 so that gray will be written to RGBA
         # image's alpha or vice versa
         for relativeIndex in range(0,minPixelCount):
             # dst[destIndex + destImage.bOffset] = \
@@ -419,14 +437,15 @@ def range_copy_with_bo(destImage,
             destIndex += destByteDepth
             sourceIndex += sourceByteDepth
     else:
-        print("Not Yet Implemented in ")
+        print("Not Yet Implemented in range_copy_with_bo")
+
 
 def set_at_from_ivec_with_bo(
-        dst, destStride, destByteDepth, vec2, brushColor,
+        dst, dstStride, destByteDepth, vec2, brushColor,
         bOffset, gOffset, rOffset, aOffset):
     xCenter = int(vec2[0])
     yCenter = int(vec2[1])
-    pixelByteIndex = destStride*yCenter + xCenter*destByteDepth
+    pixelByteIndex = dstStride*yCenter + xCenter*destByteDepth
     # print ("pixelByteIndex:" + str(pixelByteIndex))
     # print ("len(pixelBuffer):" + str(len(dst)))
     # print("writing bytes...")
@@ -438,11 +457,11 @@ def set_at_from_ivec_with_bo(
 
 
 def set_at_from_fvec_with_bo(
-        dst, destStride, destByteDepth, vec2, brushColor,
+        dst, dstStride, destByteDepth, vec2, brushColor,
         bOffset, gOffset, rOffset, aOffset):
     xCenter = int(vec2[0])
     yCenter = int(vec2[1])
-    pixelByteIndex = destStride*yCenter + xCenter*destByteDepth
+    pixelByteIndex = dstStride*yCenter + xCenter*destByteDepth
     # print ("pixelByteIndex:" + str(pixelByteIndex))
     # print ("len(pixelBuffer):" + str(len(dst)))
     # print("writing bytes...")
@@ -453,11 +472,11 @@ def set_at_from_fvec_with_bo(
         dst[pixelByteIndex + aOffset] = int(round(brushColor[4]*255.0))
 
 def set_at_from_fcolor_with_bo(
-        dst, destStride, destByteDepth, vec2, brushColor,
+        dst, dstStride, destByteDepth, vec2, brushColor,
         bOffset, gOffset, rOffset, aOffset):
     xCenter = int(vec2[0])
     yCenter = int(vec2[0])
-    pixelByteIndex = destStride*yCenter + xCenter*destByteDepth
+    pixelByteIndex = dstStride*yCenter + xCenter*destByteDepth
     # print ("pixelByteIndex:" + str(pixelByteIndex))
     # print ("len(pixelBuffer):" + str(len(dst)))
     # print("writing bytes...")
@@ -467,10 +486,9 @@ def set_at_from_fcolor_with_bo(
     if (aOffset is not None) and (aOffset<destByteDepth):
         dst[pixelByteIndex + aOffset] = int(round(brushColor.a*255.0))
 
-# static_DrawToArray_ToTopLeft_LineCopy_FillRestWithTransparent
-def blit_copy(dst_data, dst_stride,
+def blit_copy(dst_data, dstStride,
               dst_byteDepth, dst_size,
-              src_data, src_stride,
+              src_data, srcStride,
               src_byteDepth, src_size):
     """Draw to array
     Draw to top left using line copy, and fill rest with transparent.
@@ -482,15 +500,15 @@ def blit_copy(dst_data, dst_stride,
     if dst_byteDepth == src_byteDepth:
         dl_zeroes = None  # destLineOfZeroes
         if (src_height<dst_size[1]):
-            dl_zeroes = bytearray(dst_stride)
+            dl_zeroes = bytearray(dstStride)
         if (src_width==dst_width):
             d_lpi = 0
             s_lpi = 0
-            for destY in range(0, dst_height):
-                d_nlpi = d_lpi + dst_stride
+            for dstY in range(0, dst_height):
+                d_nlpi = d_lpi + dstStride
                 # NextSourceLinePixelIndex:
-                s_nlpi = s_lpi + src_stride
-                if (destY<src_height):
+                s_nlpi = s_lpi + srcStride
+                if (dstY<src_height):
                     # NOTE: width difference is already handled in outer
                     # "if" statement, for speed.
                     dst_data[d_lpi:d_nlpi] = src_data[
@@ -499,17 +517,17 @@ def blit_copy(dst_data, dst_stride,
                     dst_data[d_lpi:d_nlpi] = dl_zeroes[:]
                 else:
                     break
-                d_lpi += dst_stride
-                s_lpi += src_stride
+                d_lpi += dstStride
+                s_lpi += srcStride
         elif (src_width>dst_width):
             d_lpi = 0
             s_lpi = 0
-            for destY in range(0, dst_height):
-                d_nlpi = d_lpi + dst_stride
-                # s_nlpi = s_lpi + src_stride
-                # Must ensure same size! Use dst_stride:
-                s_nlpi_ltd = s_lpi + dst_stride # intentionally dst
-                if (destY<src_height):
+            for dstY in range(0, dst_height):
+                d_nlpi = d_lpi + dstStride
+                # s_nlpi = s_lpi + srcStride
+                # Must ensure same size! Use dstStride:
+                s_nlpi_ltd = s_lpi + dstStride # intentionally dst
+                if (dstY<src_height):
                     # NOTE: width difference is already handled in outer
                     # "if" statement, for speed.
                     dst_data[d_lpi:d_nlpi] = src_data[
@@ -518,22 +536,22 @@ def blit_copy(dst_data, dst_stride,
                     dst_data[d_lpi:d_nlpi] = dl_zeroes[:]
                 else:
                     break
-                d_lpi += dst_stride
-                s_lpi += src_stride
+                d_lpi += dstStride
+                s_lpi += srcStride
         else:  # elif (src_width<dst_width):
             d_lpi = 0
             s_lpi = 0
             # PartialDestLineOfZeroes:
-            pdl_zeroes = bytearray(dst_stride-src_stride)
-            for destY in range(0, dst_height):
-                d_nlpi = d_lpi + dst_stride
-                d_nlpi_ltd = d_lpi + src_stride
+            pdl_zeroes = bytearray(dstStride-srcStride)
+            for dstY in range(0, dst_height):
+                d_nlpi = d_lpi + dstStride
+                d_nlpi_ltd = d_lpi + srcStride
                 # intentially src stride to limit self stride since
                 #     # source is smaller
-                s_nlpi = s_lpi + dst_stride # indentionally src
-                # s_nlpi_ltd = s_lpi + dst_stride
-                #     # intentionally dst_stride, to limit what to get
-                if (destY<src_height):
+                s_nlpi = s_lpi + dstStride # indentionally src
+                # s_nlpi_ltd = s_lpi + dstStride
+                #     # intentionally dstStride, to limit what to get
+                if (dstY<src_height):
                     # NOTE: width difference is already handled in outer
                     # "if" statement, for speed.
                     dst_data[d_lpi:d_nlpi_ltd] = src_data[
@@ -544,8 +562,8 @@ def blit_copy(dst_data, dst_stride,
                     dst_data[d_lpi:d_nlpi] = dl_zeroes[:]
                 else:
                     break
-                d_lpi += dst_stride
-                s_lpi += src_stride
+                d_lpi += dstStride
+                s_lpi += srcStride
     else:
         print("Not Yet Implemented: different byte depth in blit_copy")
 
@@ -554,18 +572,19 @@ def blit_copy(dst_data, dst_stride,
 # (NOT static_set_at_from_fvec_with_bo)
 # was formerly:
 # drawFromArray_ToTopLeft_FillRestWithTransparent_CustomByteOrder
-# drawFromArray_ToTopLeft_FillRestWithTransparent_FromCustomByteOrder
+# blit_copy_with_bo
 
 # static_set_at_from_fvec_with_bo
 # was formerly:
 # static_set_at_from_float_color_ToCustomByteOrder
 
+
 class PPImage:
 
-    def __init__(self, size, byte_depth=4):
-            self.init(size, byte_depth, bufferAsRef=None)
+    def __init__(self, size, byteDepth=4):
+            self.init(size, byteDepth, bufferAsRef=None)
 
-    def init(self, size, byte_depth=4, bufferAsRef=None):
+    def init(self, size, byteDepth=4, bufferAsRef=None):
         self.name = None
         self.data = None
         self.bOffset = None
@@ -573,7 +592,7 @@ class PPImage:
         self.rOffset = None
         self.aOffset = None
         self.lastUsedFileName = None
-        self.debugEnabled = False
+        self.enableDebug = False
 
         previousByteCount = None
         if (self.data is not None):
@@ -581,8 +600,8 @@ class PPImage:
         self.size = (int(size[0]), int(size[1]))
         # self.width = int(size[0])
         # self.height = int(size[1])
-        self.byte_depth = int(byte_depth)
-        self.stride = self.size[0] * self.byte_depth
+        self.byteDepth = int(byteDepth)
+        self.stride = self.size[0] * self.byteDepth
         self.byteCount = self.stride * self.size[1]
         if (bufferAsRef is None):
             if ((previousByteCount is None) or
@@ -592,24 +611,47 @@ class PPImage:
         else:
             self.data = bufferAsRef
 
-        if (byte_depth>3):
+        if (byteDepth>3):
             self.bOffset = 0
             self.gOffset = 1
             self.rOffset = 2
             self.aOffset = 3
-        elif (byte_depth==1):
+        elif (byteDepth==1):
             self.bOffset = None
             self.gOffset = None
             self.rOffset = None
             self.aOffset = 0
-        elif (byte_depth==3):
+        elif (byteDepth==3):
             self.bOffset = 0
             self.gOffset = 1
             self.rOffset = 2
             self.aOffset = None
         else:
-            print("ERROR: unknown byte_depth " + str(byte_depth) +
+            print("ERROR: unknown byteDepth " + str(byteDepth) +
                   " in PPImage init")
+
+    def get_new(self, width, height, byteDepth):
+        print("WARNING: subclass should implement get_new")
+        return PPImage(width, height, byteDepth)
+
+    def copy_flipped_v(self):
+        result = self.get_new(self.width, self.height, self.byteDepth)
+        srcY = self.height - 1
+        dstI = 0
+        #source_slack = self.stride - self.width*self.byteDepth
+        dest_slack = result.stride - result.width*result.byteDepth
+        for dest_y in range(0,self.height):
+            srcI = srcY * self.stride
+            for x in range(0,self.width):
+                for chan in range(0,self.byteDepth):
+                    result.data[dstI] = self.data[srcI]
+                    srcI += 1
+                    dstI += 1
+                # srcI += self.byteDepth
+                # dstI += translatedImage.byteDepth
+            srcY -= 1
+            dstI += dest_slack
+        return result
 
     def get_size(self):
         return (self.size[0], self.size[1])
@@ -634,10 +676,10 @@ class PPImage:
             print("WARNING: unknown property height was set.")
         except:
             pass
-        ret['tmp']['byte_depth'] = self.byte_depth
+        ret['tmp']['byteDepth'] = self.byteDepth
         ret['tmp']['stride'] = self.stride
         ret['tmp']['byteCount'] = self.byteCount
-        ret['tmp']['debugEnabled'] = self.debugEnabled
+        ret['tmp']['enableDebug'] = self.enableDebug
         return ret
 
     def draw_line_ivec3_h(self, vec2, rgb_bytes, count):
@@ -661,9 +703,9 @@ class PPImage:
     def _draw_line_ivec3_h(self, vec2, rgb_bytes, count):
         #self.set_ivec3_at(vec2, color)
         x, y = vec2
-        b_i = self.stride*y + x*self.byte_depth + self.bOffset
-        g_i = self.stride*y + x*self.byte_depth + self.gOffset
-        r_i = self.stride*y + x*self.byte_depth + self.rOffset
+        b_i = self.stride*y + x*self.byteDepth + self.bOffset
+        g_i = self.stride*y + x*self.byteDepth + self.gOffset
+        r_i = self.stride*y + x*self.byteDepth + self.rOffset
         b = rgb_bytes[2]  # int(color.b*255.0+.5)
         g = rgb_bytes[1]  # int(color.g*255.0+.5)
         r = rgb_bytes[0]  # int(color.r*255.0+.5)
@@ -673,7 +715,7 @@ class PPImage:
                              " Tried to write at index:" + str(b_i) +
                              " pos:" + str((vec2)) +
                              " size:" + str((self.size)) +
-                             " byte_depth:" + str(self.byte_depth) +
+                             " byteDepth:" + str(self.byteDepth) +
                              " stride:" + str(self.stride) +
                              " byteCount:" + str(self.byteCount)
             )
@@ -681,9 +723,9 @@ class PPImage:
             self.data[b_i] = b
             self.data[g_i] = g
             self.data[r_i] = r
-            b_i += self.byte_depth
-            g_i += self.byte_depth
-            r_i += self.byte_depth
+            b_i += self.byteDepth
+            g_i += self.byteDepth
+            r_i += self.byteDepth
 
     def draw_line_ivec3_v(self, vec2, rgb_bytes, count):
         # 0 is x or width, 1 is y or height
@@ -706,9 +748,9 @@ class PPImage:
     def _draw_line_ivec3_v(self, vec2, rgb_bytes, count):
         #self.set_ivec3_at(vec2, color)
         x, y = vec2
-        b_i = self.stride*y + x*self.byte_depth + self.bOffset
-        g_i = self.stride*y + x*self.byte_depth + self.gOffset
-        r_i = self.stride*y + x*self.byte_depth + self.rOffset
+        b_i = self.stride*y + x*self.byteDepth + self.bOffset
+        g_i = self.stride*y + x*self.byteDepth + self.gOffset
+        r_i = self.stride*y + x*self.byteDepth + self.rOffset
         b = rgb_bytes[2]  # int(color.b*255.0+.5)
         g = rgb_bytes[1]  # int(color.g*255.0+.5)
         r = rgb_bytes[0]  # int(color.r*255.0+.5)
@@ -718,7 +760,7 @@ class PPImage:
                              " Tried to write at index:" + str(b_i) +
                              " pos:" + str((vec2)) +
                              " size:" + str((self.size)) +
-                             " byte_depth:" + str(self.byte_depth) +
+                             " byteDepth:" + str(self.byteDepth) +
                              " stride:" + str(self.stride) +
                              " byteCount:" + str(self.byteCount)
             )
@@ -732,7 +774,7 @@ class PPImage:
 
     def set_ivec3_at(self, vec2, rgb_bytes):
         # destPixelByteIndex:
-        d_p_bi = self.stride*vec2[1] + vec2[0]*self.byte_depth
+        d_p_bi = self.stride*vec2[1] + vec2[0]*self.byteDepth
         # dst[d_p_bi + self.bOffset] = int(color.b*255.0+.5)
         # dst[d_p_bi + self.gOffset] = int(color.g*255.0+.5)
         # dst[d_p_bi + self.rOffset] = int(color.r*255.0+.5)
@@ -746,7 +788,7 @@ class PPImage:
                     and must have .a unless self.aOffset is None
         """
         set_at_from_fcolor_with_bo(self.data,
-            self.stride, self.byte_depth, vec2, brushColor,
+            self.stride, self.byteDepth, vec2, brushColor,
             self.bOffset, self.gOffset, self.rOffset, self.aOffset)
 
     def set_at_from_fvec(self, vec2, brushColor):
@@ -754,7 +796,7 @@ class PPImage:
         brushColor: must be a list of floats, each 0.0 to 1.0
         """
         set_at_from_fvec_with_bo(self.data,
-            self.stride, self.byte_depth, vec2, brushColor,
+            self.stride, self.byteDepth, vec2, brushColor,
             self.bOffset, self.gOffset, self.rOffset, self.aOffset)
 
     def set_at_from_ivec(self, vec2, brushColor):
@@ -762,8 +804,28 @@ class PPImage:
         brushColor: must be a list of integers, each 0 to 255
         """
         set_at_from_ivec_with_bo(self.data,
-            self.stride, self.byte_depth, vec2, brushColor,
+            self.stride, self.byteDepth, vec2, brushColor,
             self.bOffset, self.gOffset, self.rOffset, self.aOffset)
+
+
+    def get_at(self, coordinates):
+        RGB_bytes = byte_array(4)
+        if len(coordinates) >= 2:
+            pixelByteIndex = int(coordinates[1]*self.stride + coordinates[0]*self.byteDepth)
+            if self.byteDepth >= 3:
+                RGB_bytes[0] = self.data[pixelByteIndex + self.rOffset]
+                RGB_bytes[1] = self.data[pixelByteIndex + self.gOffset]
+                RGB_bytes[2] = self.data[pixelByteIndex + self.bOffset]
+                if self.byteDepth >= 4:
+                    RGB_bytes[3] = self.data[pixelByteIndex + self.aOffset]
+                else:
+                    RGB_bytes[4] = 255
+            else:
+                RGB_bytes[0] = self.data[pixelByteIndex]
+                RGB_bytes[1] = self.data[pixelByteIndex]
+                RGB_bytes[2] = self.data[pixelByteIndex]
+                RGB_bytes[3] = self.data[pixelByteIndex]
+        return RGB_bytes
 
     # def DrawFromWithAlpha(self, sourceVariableImage, vec2):
 
@@ -780,8 +842,8 @@ class PPImage:
                 #    returnMax = self.data[d_bi+self.gOffset]
                 #if self.data[d_bi+self.rOffset]>returnMax:
                 #    returnMax = self.data[d_bi+self.rOffset]
-                #d_bi += self.byte_depth
-                for channelIndex in range(0,self.byte_depth):
+                #d_bi += self.byteDepth
+                for channelIndex in range(0,self.byteDepth):
                     if self.data[d_bi]>returnMax:
                         returnMax = self.data[d_bi]
                     d_bi += 1
@@ -800,7 +862,7 @@ class PPImage:
                     if self.data[d_bi+self.aOffset]>returnMax:
                         returnMax = self.data[d_bi +
                                               self.aOffset]
-                    d_bi += self.byte_depth
+                    d_bi += self.byteDepth
                 d_lbi += self.stride
         return returnMax
 
@@ -813,12 +875,11 @@ class PPImage:
         self.fill_ivec4((0, 0, 0, 0))
 
     def fill_ivec4(self, color):
-        if self.byte_depth >= 4:
+        if self.byteDepth >= 4:
             self.fill_icolor(color[0], color[1], color[2], color[3])
         else:
             self.fill_icolor(color[0], color[1], color[2])
 
-    # formerly FillAllDestructivelyUsingColorBytess
     def fill_icolor(self, setRByte, setGByte, setBByte, setAByte):
         d_bi = 0
         d_lbi = d_bi
@@ -831,20 +892,20 @@ class PPImage:
                 dst[d_bi+self.gOffset] = setBytes[1]
                 dst[d_bi+self.rOffset] = setBytes[2]
                 dst[d_bi+self.aOffset] = setBytes[3]
-                d_bi += self.byte_depth
+                d_bi += self.byteDepth
             d_lbi += self.stride
 
-    def blit_copy_with_bo(self, src_data, src_stride,
+    def blit_copy_with_bo(self, src_data, srcStride,
             src_byteDepth, src_size, src_bOffset,
             src_gOffset, src_rOffset, src_aOffset):
         # this is much like LineCopy version, except instead of using
         # python array slicing it uses static_range_copy_with_bo
-        src_stride = int(src_stride)
+        srcStride = int(srcStride)
         src_width = int(src_size[0])
         src_height = int(src_size[1])
         src_byteDepth = int(src_byteDepth)
-        # print("blit_copy_with_bo: self.byte_depth: " +
-              # str(self.byte_depth))
+        # print("blit_copy_with_bo: self.byteDepth: " +
+              # str(self.byteDepth))
         # print("blit_copy_with_bo: src_byteDepth: " +
               # str(src_byteDepth))
         IsToFillRestWithZeroes = True
@@ -852,7 +913,7 @@ class PPImage:
         s_bi = 0  # sourceByteIndex
 
         # force colorspace conversion:
-        if (self.byte_depth>=3):
+        if (self.byteDepth>=3):
             if ((src_aOffset is not None) and
                     (src_bOffset is None) and
                     (src_gOffset is None) and
@@ -908,7 +969,7 @@ class PPImage:
         # Allow other value types such as float in case of float
         # color.
 
-        if (self.byte_depth>=3 and
+        if (self.byteDepth>=3 and
                 (src_byteDepth>=3 or src_byteDepth==1)):
             dl_zeroes = None
             if (src_height<self.size[1]):
@@ -916,14 +977,14 @@ class PPImage:
             if (src_width==self.size[0]):
                 d_lpi = 0  # dest line pixel index
                 s_lpi = 0  # sourceLinePixelIndex
-                for destY in range(0, self.size[1]):
+                for dstY in range(0, self.size[1]):
                     d_bi = d_lpi
                     s_bi = s_lpi
                     d_nlpi = d_lpi + self.stride
                         # NextDestLinePixelIndex
                     # s_nlpi = (s_lpi +
-                    #                             src_stride)
-                    if (destY<src_height):
+                    #                             srcStride)
+                    if (dstY<src_height):
                         # NOTE: width difference is already handled in
                         # outer "if" statement, for speed.
                         # self.data[d_lpi:
@@ -937,18 +998,18 @@ class PPImage:
                         #     s_nlpi, src_bOffset,
                         #     src_gOffset, src_rOffset,
                         #     src_aOffset)
-                        if (self.byte_depth==3):
-                            for destX in range(0, self.size[0]):
+                        if (self.byteDepth==3):
+                            for dstX in range(0, self.size[0]):
                                 self.data[d_bi + self.bOffset] = \
                                     src_data[s_bi + src_bOffset]
                                 self.data[d_bi + self.gOffset] = \
                                     src_data[s_bi + src_gOffset]
                                 self.data[d_bi + self.rOffset] = \
                                     src_data[s_bi + src_rOffset]
-                                d_bi += self.byte_depth
+                                d_bi += self.byteDepth
                                 s_bi += src_byteDepth
-                        elif (self.byte_depth>=4):
-                            for destX in range(0, self.size[0]):
+                        elif (self.byteDepth>=4):
+                            for dstX in range(0, self.size[0]):
                                 self.data[d_bi + self.bOffset] = \
                                     src_data[s_bi + src_bOffset]
                                 self.data[d_bi + self.gOffset] = \
@@ -957,16 +1018,16 @@ class PPImage:
                                     src_data[s_bi + src_rOffset]
                                 self.data[d_bi + self.aOffset] = \
                                     src_data[s_bi + src_aOffset]
-                                d_bi += self.byte_depth
+                                d_bi += self.byteDepth
                                 s_bi += src_byteDepth
-                        elif (self.byte_depth==1):
-                            for destX in range(0, self.size[0]):
+                        elif (self.byteDepth==1):
+                            for dstX in range(0, self.size[0]):
                                 self.data[d_bi + self.aOffset] = \
                                     src_data[s_bi + src_aOffset]
-                                d_bi += self.byte_depth
+                                d_bi += self.byteDepth
                                 s_bi += src_byteDepth
-                            # if (destX<src_width):
-                            # for d_chan in range(0,self.byte_depth):
+                            # if (dstX<src_width):
+                            # for d_chan in range(0,self.byteDepth):
                             # else:
                             #     break
                     elif IsToFillRestWithZeroes:
@@ -980,19 +1041,19 @@ class PPImage:
                     else:
                         break
                     d_lpi += self.stride
-                    s_lpi += src_stride
+                    s_lpi += srcStride
             elif (src_width > self.size[0]):
                 d_lpi = 0
                 s_lpi = 0
-                for destY in range(0, self.size[1]):
+                for dstY in range(0, self.size[1]):
                     d_nlpi = d_lpi + self.stride
                     # s_nlpi = (s_lpi +
-                    #                             src_stride)
+                    #                             srcStride)
                     # NextSourceLinePixelIndexLIMITED:
                     s_nlpi_ltd = s_lpi + self.stride
                         # intentionally self.stride,
                         # to limit how much to get
-                    if (destY<src_height):
+                    if (dstY<src_height):
                         # NOTE: width difference is already handled in
                         # outer "if" statement, for speed.
                         # self.data[d_lpi:d_nlpi] = \
@@ -1007,22 +1068,22 @@ class PPImage:
                     else:
                         break
                     d_lpi += self.stride
-                    s_lpi += src_stride
+                    s_lpi += srcStride
             else:  # elif (src_width < self.size[0]):
                 d_lpi = 0  # dest line pixel index
                 s_lpi = 0
-                pdl_zeroes = bytearray(self.stride-src_stride)
-                for destY in range(0, self.size[1]):
+                pdl_zeroes = bytearray(self.stride-srcStride)
+                for dstY in range(0, self.size[1]):
                     d_nlpi = d_lpi + self.stride
                     # NextDestLinePixelIndexLIMITED:
-                    d_nlpi_ltd = d_lpi + src_stride
+                    d_nlpi_ltd = d_lpi + srcStride
                         # intentially src stride to limit self stride
                         # since source is smaller
-                    s_nlpi = s_lpi + src_stride
+                    s_nlpi = s_lpi + srcStride
                     # s_nlpi_ltd = \
                     #     s_lpi + self.stride
                     # intentionally self.stride, to limit what to get
-                    if (destY<src_height):
+                    if (dstY<src_height):
                         # NOTE: width difference is already handled in
                         # outer "if" statement, for speed.
                         # self.data[d_lpi:
@@ -1042,19 +1103,18 @@ class PPImage:
                     else:
                         break
                     d_lpi += self.stride
-                    s_lpi += src_stride
+                    s_lpi += srcStride
         else:
             print("Byte depth combination not implemented in" +
                   " blit_copy_with_bo: src_byteDepth=" +
-                  str(src_byteDepth) + " to self.byte_depth" +
-                  str(self.byte_depth))
+                  str(src_byteDepth) + " to self.byteDepth" +
+                  str(self.byteDepth))
 
-    # drawToSelfTopLeft_LineCopy_FillRestWithTransparent
-    def blit_copy(self, src_PPImage):
+    def blit_copy(self, srcImage):
         blit_copy(self.data, self.stride,
-                  self.byte_depth, self.size,
-                  src_PPImage.data, src_PPImage.stride,
-                  src_PPImage.byte_depth, src_PPImage.size)
+                  self.byteDepth, self.size,
+                  srcImage.data, srcImage.stride,
+                  srcImage.byteDepth, srcImage.size)
 
     def get_rect(self):
         return PPRect(0, 0, self.size[0], self.size[1])
@@ -1065,95 +1125,178 @@ class PPImage:
     def get_height(self):
         return self.size[1]
 
-    def _blit_from(self, ppimage, pprect, source_rect):
-        if pprect.width != source_rect.width:
+    def blitFromCenter(self, srcImage, center_x, center_y):
+        if srcImage is not None:
+            centeredDest = (int(center_x) - int(srcImage.width/2), int(center_y) - int(srcImage.height/2))
+            self.blit(srcImage, centeredDest)
+
+    # area: Rectangle (PythonPixels or Pygame) of source
+    #       (must fit inside dest, so normally use blit_from instead
+    #       to adjust this automatically)
+    def _blit_from(self, srcImage, destRect, source_rect):
+        # The following notes marked PYGAME are from <http://www.pygame.org/docs/ref/surface.html#pygame.Surface.blit> Apr 30, 2015
+        # but this program does not use any code from pygame.
+        # PYGAME: new in 1.8: BLEND_ADD, BLEND_SUB, BLEND_MULT, BLEND_MIN, BLEND_MAX
+        # PYGAME: 1.8.1: BLEND_RGBA_ADD, BLEND_RGBA_SUB, BLEND_RGBA_MULT, BLEND_RGBA_MIN, BLEND_RGBA_MAX BLEND_RGB_ADD, BLEND_RGB_SUB, BLEND_RGB_MULT, BLEND_RGB_MIN, BLEND_RGB_MAX
+        # PYGAME: The return rectangle is the area of the affected pixels, excluding any pixels outside the destination Surface, or outside the clipping area
+        # PYGAME: Pixel alphas will be ignored when blitting to an 8 bit Surface.
+        # TODO: implement area (allow different from source)
+        # TODO: note yet implemented special_flags here
+
+        if area is None or len(area)<2:
+            area = (0,0)
+        
+        if srcImage is None:
+            raise ValueError('srcImage is None.')
+        if destImage is None:
+            raise ValueError('destImage is None.')
+
+        if destRect.width != source_rect.width:
             print("ERROR in _blit_from: does not support scaling," +
-                  " but width of dest is " + str(pprect.width) +
+                  " but width of dest is " + str(destRect.width) +
                   " and width of source is " + str(source_rect.width))
-        if pprect.height != source_rect.height:
+        if destRect.height != source_rect.height:
             print("ERROR in _blit_from: does not support scaling," +
-                  " but height of dest is " + str(pprect.height) +
+                  " but height of dest is " + str(destRect.height) +
                   " and height of source is " + str(source_rect.height))
-        src_x = source_rect.left
-        src_start_x = src_x
-        src_y = source_rect.top
-        src_right = src_x + source_rect.width
-        src_bottom = src_y + source_rect.height
-        dst_x = pprect.left
-        dst_start_x = dst_x
-        dst_y = pprect.top
-        dst_right = dst_x + pprect.width
-        dst_bottom = dst_y + pprect.height
-        src_bd = ppimage.byte_depth
-        dst_bd = self.byte_depth
+        srcX = source_rect.left
+        srcStartX = srcX
+        srcY = source_rect.top
+        srcRight = srcX + source_rect.width
+        srcBottom = srcY + source_rect.height
+        dstX = destRect.left
+        dstStartX = dstX
+        dstY = destRect.top
+        dstRight = dstX + destRect.width
+        dstBottom = dstY + destRect.height
+        srcBD = srcImage.byteDepth
+        dstBD = self.byteDepth
         dst = self.data
-        src = ppimage.data
-        dst_stride = self.stride
-        src_stride = ppimage.stride
-        dst_bo = self.bOffset
-        dst_go = self.gOffset
-        dst_ro = self.rOffset
-        dst_ao = self.aOffset
-        src_bo = ppimage.bOffset
-        src_go = ppimage.gOffset
-        src_ro = ppimage.rOffset
-        src_ao = ppimage.aOffset
+        src = srcImage.data
+        dstStride = self.stride
+        srcStride = srcImage.stride
+        dstBO = self.bOffset
+        dstGO = self.gOffset
+        dstRO = self.rOffset
+        dstAO = self.aOffset
+        srcBO = srcImage.bOffset
+        srcGO = srcImage.gOffset
+        srcRO = srcImage.rOffset
+        srcAO = srcImage.aOffset
 
+        if self.enableDebug:
+            print()
+            print("srcImage.width:"+str(srcImage.width))
+            print("srcImage.height:"+str(srcImage.height))
+            # print("brushImage.byteDepth:"+str(srcImage.byteDepth))
+            # print("brushImage.stride:"+str(srcImage.stride))
+            print("self.stride:"+str(self.stride))
+            print("self.byteDepth:"+str(self.byteDepth))
+            print("destByteIndex:"+str(destByteIndex))
 
-        while dst_y < dst_bottom:
-            dst_x = dst_start_x
-            src_x = src_start_x
-            if src_bd >= 4:
-                while dst_x < dst_right:
-                    dst_i = dst_y*dst_stride + dst_x*dst_bd
-                    src_i = src_y*src_stride + src_x*src_bd
-                    a = float(src[src_i + src_ao]) / 255.0
+        while dstY < dstBottom:
+            dstX = dstStartX
+            srcX = srcStartX
+            if srcBD >= 4:
+                while dstX < dstRight:
+                    dstI = dstY*dstStride + dstX*dstBD
+                    srcI = srcY*srcStride + srcX*srcBD
+                    a = float(src[srcI + srcAO]) / 255.0
                     ia = 1.0 - a
-                    for chan in range(dst_bd):
-                        dst[dst_i + dst_bo] = int(round(ia*dst[dst_i + dst_bo] + a*src[src_i + dst_bo]))
-                        dst[dst_i + dst_go] = int(round(ia*dst[dst_i + dst_go] + a*src[src_i + dst_go]))
-                        dst[dst_i + dst_ro] = int(round(ia*dst[dst_i + dst_ro] + a*src[src_i + dst_ro]))
-                    dst_x += 1
-                    src_x += 1
+                    for chan in range(dstBD):
+                        dst[dstI + dstBO] = int(round(ia*dst[dstI + dstBO] + a*src[srcI + dstBO]))
+                        dst[dstI + dstGO] = int(round(ia*dst[dstI + dstGO] + a*src[srcI + dstGO]))
+                        dst[dstI + dstRO] = int(round(ia*dst[dstI + dstRO] + a*src[srcI + dstRO]))
+                    dstX += 1
+                    srcX += 1
             else:
-                while dst_x < dst_right:
-                    dst_i = dst_y*dst_stride + dst_x*dst_bd
-                    src_i = src_y*src_stride + src_x*src_bd
-                    for chan in range(dst_bd):
-                        dst[dst_i + dst_bo] = src[src_i + dst_bo]
-                        dst[dst_i + dst_go] = src[src_i + dst_go]
-                        dst[dst_i + dst_ro] = src[src_i + dst_ro]
-                    dst_x += 1
-                    src_x += 1
-            dst_y += 1
-            src_y += 1
+                while dstX < dstRight:
+                    dstI = dstY*dstStride + dstX*dstBD
+                    srcI = srcY*srcStride + srcX*srcBD
+                    for chan in range(dstBD):
+                        dst[dstI + dstBO] = src[srcI + dstBO]
+                        dst[dstI + dstGO] = src[srcI + dstGO]
+                        dst[dstI + dstRO] = src[srcI + dstRO]
+                    dstX += 1
+                    srcX += 1
+            dstY += 1
+            srcY += 1
 
 
-    def blit_from(self, ppimage, pprect):
-        source_rect = ppimage.get_rect()
+    def blit_from(self, srcImage, destRect):
+        source_rect = srcImage.get_rect()
         self_rect = self.get_rect()
-        if pprect.left < self_rect.left:
-            diff = self_rect.left - pprect.left
+        if destRect.left < self_rect.left:
+            diff = self_rect.left - destRect.left
             source_rect.left += diff
             source_rect.width -= diff
-        if pprect.top < self_rect.top:
-            diff = self_rect.top - pprect.top
+        if destRect.top < self_rect.top:
+            diff = self_rect.top - destRect.top
             source_rect.top += diff
             source_rect.height -= diff
-        final_rect = PPRect(pprect.left, pprect.top, pprect.width,
-                            pprect.height)
+        final_rect = PPRect(destRect.left, destRect.top, destRect.width,
+                            destRect.height)
         final_rect.clamp_ip(self_rect)
+        #source_rect = final_rect.copy()
+        #source_rect.move_ip(final_rect.left-destRct.left, final_Rect.top-destRect.top)
+        #source_rect.clamp(srcRectOriginal)
         if (final_rect.width > 0) and (final_rect.height > 0):
-            self._blit_from(ppimage, final_rect, source_rect)
+            self._blit_from(srcImage, final_rect, source_rect)
+
+    def get_dump(self):
+        result = ""
+        try:
+            result += "lastUsedFileName:"+str(self.lastUsedFileName)+";"
+        except:
+            pass
+        try:
+            result += "width:"+str(self.width)+";"
+        except:
+            pass
+        try:
+            result += "height:"+str(self.height)+";"
+        except:
+            pass
+        try:
+            result += "stride:"+str(self.stride)+";"
+        except:
+            pass
+        try:
+            result += "byteDepth:"+str(self.byteDepth)+";"
+        except:
+            pass
+        try:
+            result += "byteCount:"+str(self.byteCount)+";"
+        except:
+            pass
+        try:
+            result += "bOffset:"+str(self.bOffset)+";"
+        except:
+            pass
+        try:
+            result += "gOffset:"+str(self.gOffset)+";"
+        except:
+            pass
+        try:
+            result += "rOffset:"+str(self.rOffset)+";"
+        except:
+            pass
+        try:
+            result += "aOffset:"+str(self.aOffset)+";"
+        except:
+            pass
+        return result
+
+# end class PPImage
 
 if __name__ == "__main__":
     print("This module should be imported by your program.")
     print("  tests:")
     size = (128, 128)
-    src_img = PPImage(size)
-    dst_img = PPImage(size)
+    srcImg = PPImage(size)
+    dstImg = PPImage(size)
     print("blit_copy_with_bo...")
-    dst_img.blit_copy_with_bo(src_img.data, src_img.stride,
-        src_img.byte_depth, src_img.size, src_img.bOffset,
-        src_img.gOffset, src_img.rOffset, src_img.aOffset)
+    dstImg.blit_copy_with_bo(srcImg.data, srcImg.stride,
+        srcImg.byteDepth, srcImg.size, srcImg.bOffset,
+        srcImg.gOffset, srcImg.rOffset, srcImg.aOffset)
     print("  done testing pythonpixels.")
