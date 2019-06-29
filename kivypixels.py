@@ -1,38 +1,96 @@
+import kivy
 from pythonpixels import PPImage, PPColor
+from kivy.resources import resource_find
+from common import *
 # from pythonpixels import PPColor
-from pythonpixels import vec4_from_vec3, bgr_from_hex
-import pygame
+from kivy.core.image import Image as CoreImage
+from kivy.graphics.texture import Texture
+#import timeit
+#from timeit import default_timer as best_timer
+pygame_enable = False
+try:
+    #kivy 1.8 and earlier:
+    import pygame
+    pygame_enable = True
+except:
+    pass
+#except Exception as e:
+#    print("Could not finish importing pygame:"+str(e))
+
+import io
+#from kivy.uix.image import Image
+from kivy.core.image import Image as CoreImage
+
+#try:
+#    #kivy 1.9.0 way:
+#    import io
+#    from kivy.uix.Image import Image
+#    #from kivy.core.image import Image as CoreImage
+#except:
+#    pass
 import os
 
 from pythonpixels import bufferToTupleStyleString
 
-# formerly static_createFromImageFile
+def get_ext_lower(path):
+    fileName, fileExtension = os.path.splitext(path)
+    fileExtension = fileExtension[1:]
+    return fileExtension.lower()
+
 def load_image(self,fileName):
     returnKVI = None
-    if os.path.exists(fileName):
-        newSurface = pygame.image.load(fileName)
-        returnKVI = KPImage(newSurface.get_size())
-        data = pygame.image.tostring(newSurface, 'RGBA', False)
-        # blit_copy_with_bo(self, inputArray, inputStride,
-                          # inputByteDepth, input_size,
-                          # bOffset, gOffset, rOffset, aOffset):
+    data = None
+    participle = "(before initializing)"
+    # if os.path.exists(fileName):
+        # returnKVI = KPImage(1,1,4)
+        # returnKVI.load(fileName)
+        # return returnKVI
 
-        newSurface_byteDepth = newSurface.get_bytesize()
-            # int(newSurface.get_bitsize()/8)
-        newSurface_stride = newSurface.get_pitch()
-            # newSurface.get_width() * newSurface_byteDepth
-        bOffset = 0
-        gOffset = 1
-        rOffset = 2
-        aOffset = 3
-        returnKVI.blit_copy_with_bo(data, newSurface_stride,
-                                    newSurface_byteDepth,
-                                    newSurface.get_size(),
-                                    bOffset, gOffset, rOffset,
-                                    aOffset)
-    else:
-        print("ERROR in kivypixels.load_image:" +
-              " file '" + fileName + "' does not exist")
+    try:
+        if os.path.exists(fileName):
+            try:
+                #kivy 1.8.0 way:
+                participle = "loading Kivy 1.8 image from file"
+                newSurface = pygame.image.load(fileName)
+                participle = "accessing Kivy 1.8 image attributes"
+                returnKVI = KPImage(newSurface.get_size())
+                participle = "getting data from Kivy 1.8 image"
+                data = pygame.image.tostring(newSurface, 'RGBA', False)
+                # blit_copy_with_bo(self, inputArray, inputStride,
+                                  # inputByteDepth, inputSize,
+                                  # bOffset, gOffset, rOffset, aOffset):
+                participle = "after loading image"
+                newBD = newSurface.get_bytesize()
+                    # int(newSurface.get_bitsize()/8)
+                newStride = newSurface.get_pitch()
+                    # newSurface.get_width() * newBD
+                bOffset = 0
+                gOffset = 1
+                rOffset = 2
+                aOffset = 3
+                returnKVI.blit_copy_with_bo(data, newStride,
+                                            newBD,
+                                            newSurface.get_size(),
+                                            bOffset, gOffset, rOffset,
+                                            aOffset)
+            except:
+                #kivy 1.9.0 way:
+                #participle = "loading Kivy 1.9 unparsed file as bytes"
+                #compressed_data = io.BytesIO(open(fileName, "rb").read())
+                #participle = "loading Kivy 1.9 image from unparsed file bytes"
+                this_ext = get_ext_lower(fileName)
+                #participle = "loading Kivy 1.9 "+this_ext+" format data from unparsed file bytes"
+                #im = CoreImage(compressed_data, ext=this_ext, filename=fileName, keep_data=True)
+                im = im = CoreImage(fileName, keep_data=True)
+                participle = "accessing Kivy 1.9 image attributes (after parsing "+this_ext+" format)"
+                returnKVI = KPImage(im.width, im.height, KPImage.defaultByteDepth)
+                returnKVI.enableDebug = True
+                returnKVI.drawFromKivyImage_ToTopLeft_FillRestWithTransparent(im)
+        else:
+            print("ERROR in kivypixels.load_image:"
+                  + " file '" + fileName + "' does not exist")
+    except Exception as e:
+        print("Could not finish "+participle+" in static_createFromImageFile:"+str(e))
     return returnKVI
 
 class KPImage(PPImage):
@@ -84,29 +142,58 @@ class KPImage(PPImage):
 
     def load(self, fileName):
         self.lastUsedFileName = fileName
-        newSurface = pygame.image.load(fileName)
-        self.init(newSurface.get_size())
-        data = pygame.image.tostring(newSurface, 'RGBA', False)
-        # blit_copy_with_bo(self, inputArray, inputStride,
-                          # inputByteDepth, input_size,
-                          # bOffset, gOffset, rOffset, aOffset):
+        previousByteCount = self.byteCount
+        try:
+            if os.path.exists(fileName):
+                try:
+                    #kivy 1.8.0 way:
+                    participle = "loading Kivy 1.8 image from file"
+                    newSurface = pygame.image.load(fileName)
+                    participle = "accessing Kivy 1.8 image attributes"
+                    self.init(newSurface.get_size())
+                    participle = "getting data from Kivy 1.8 image"
+                    data = pygame.image.tostring(newSurface, 'RGBA', False)
+                    participle = "after loading image"
+                    newBD = newSurface.get_bytesize()
+                        # int(newSurface.get_bitsize() / 8)
+                    newStride = newSurface.get_pitch()
+                        # newSurface.get_width() * newBD
+                    # source color locations:
+                    bOffset = 0
+                    gOffset = 1
+                    rOffset = 2
+                    aOffset = 3
+                    self.blit_copy_with_bo(data, newStride,
+                                              newBD,
+                                              newSurface.get_size(),
+                                              bOffset, gOffset, rOffset, aOffset)
 
-        newSurface_byteDepth = newSurface.get_bytesize()
-            # int(newSurface.get_bitsize() / 8)
-        newSurface_stride = newSurface.get_pitch()
-            # newSurface.get_width() * newSurface_byteDepth
-        bOffset = 0
-        gOffset = 1
-        rOffset = 2
-        aOffset = 3
-        KPImage.blit_copy_with_bo(self, data, newSurface_stride,
-                                  newSurface_byteDepth,
-                                  newSurface.get_size(),
-                                  bOffset, gOffset, rOffset, aOffset)
+                except:
+                    # kivy 1.9.0 way:
+                    # participle = "loading Kivy 1.9 unparsed file as bytes"
+                    # compressed_data = io.BytesIO(open(fileName, "rb").read())
+                    # participle = "loading Kivy 1.9 image from unparsed file bytes"
+                    this_ext = get_ext_lower(fileName)
+                    # participle = "loading Kivy 1.9 "+this_ext+" format data from unparsed file bytes"
+                    # im = CoreImage(compressed_data, ext=this_ext, filename=fileName, keep_data=True)
+                    im = CoreImage(fileName, keep_data=True)
+                    participle = "accessing Kivy 1.9 image attributes (after parsing "+this_ext+" format)"
+                    self.init(im.width, im.height, KPImage.defaultByteDepth, None)
+                    self.enableDebug = True
+                    participle = "reading pixels from Kivy 1.9 image (after parsing "+this_ext+" format)"
+                    self.drawFromKivyImage_ToTopLeft_FillRestWithTransparent(im)
+            else:
+                print("ERROR in KivyPixels.static_createFromImageFile: file \""+fileName+"\"does not exist")
+        #except Exception as e:
+        #    print("Could not finish "+participle+" in static_createFromImageFile:"+str(e))
+        except:
+            print("Could not finish "+participle+" in static_createFromImageFile:")
+            view_traceback()
 
+    def get_new(self, width, height, byteDepth):
+        return KPImage(width, height, byteDepth)
 
-
-    def saveAs(self, fileName):
+    def saveAs(self, fileName, flip_enable=False):
         IsOK = None
         print("Saving '" + fileName + "'")
         # os.path.join(os.getcwd(), fileName)
@@ -129,40 +216,7 @@ class KPImage(PPImage):
                       # str(self.getMaxChannelValueNotIncludingAlpha()))
                 # print("self.getMaxAlphaValue():" +
                       # str(self.getMaxAlphaValue()))
-            translatedImage = KPImage(self.size,
-                                      byteDepth=self.byteDepth)
 
-
-            # Kivy 1.8.0 channel offsets are:
-            # bOffset = 2 #formerly 0 #blue comes from green channel
-            # gOffset = 0 #formerly 1 #green comes from blue channel
-            # rOffset = 1 #formerly 2
-            # aOffset = 3 #formerly 3
-
-            # since pygame.image.fromstring (or pygame.image.save??)
-            # has odd (accidentally [??] errant) byte order,
-            # channel offsets are:
-            # translatedImage.bOffset = self.gOffset #such as 1
-            # translatedImage.gOffset = self.bOffset #such as 0
-            # translatedImage.rOffset = self.rOffset #such as 2
-            # translatedImage.aOffset = self.aOffset #such as 3
-            translatedImage.bOffset = 0
-            translatedImage.gOffset = 1
-            translatedImage.rOffset = 2
-            translatedImage.aOffset = 3
-            # NOTE: kivy's pygame.image.fromstring(data,
-            # (self.fbo.size[0], self.fbo.size[1]), 'RGBA', True)
-            # is not at fault for channel order issue, and has correct
-            # channel order
-            translatedImage.blit_copy_with_bo(self.data, self.stride,
-                                              self.byteDepth,
-                                              self.size,
-                                              self.bOffset,
-                                              self.gOffset,
-                                              self.rOffset,
-                                              self.aOffset)
-            data = bytes(translatedImage.data)  # convert from bytearray
-                                                # to bytes
             if (self.enableDebug):
                 debugX = 3
                 debugY = self.height - 3
@@ -171,19 +225,90 @@ class KPImage(PPImage):
                 if (debugY>=self.height):
                     debugY=self.height-1
                 debugIndex = debugY*self.stride + debugX*self.byteDepth
-                print("debug pixel at (" + str(debugX) + "," +
-                      str(debugY) + "): " +
-                      bufferToTupleStyleString(data, debugIndex,
-                      self.byteDepth)
-                )
-            surface = pygame.image.fromstring(data, self.size, 'RGBA',
-                                              True)
-            pygame.image.save(surface, fileName)
+                print("debug pixel at (" + str(debugX) + ","
+                      + str(debugY) + "): "
+                      + bufferToTupleStyleString(data, debugIndex,
+                                                 self.byteDepth))
+            if pygame_enable:  # Kivy 1.8 and earlier:
+
+                translatedImage = KPImage(self.size,
+                                          byteDepth=self.byteDepth)
+                # Kivy 1.8.0 channel offsets are:
+                # bOffset = 2 #formerly 0 #blue comes from green channel
+                # gOffset = 0 #formerly 1 #green comes from blue channel
+                # rOffset = 1 #formerly 2
+                # aOffset = 3 #formerly 3
+
+                # since pygame.image.fromstring (or pygame.image.save??)
+                # has odd (accidentally [??] errant) byte order,
+                # channel offsets are:
+                # translatedImage.bOffset = self.gOffset #such as 1
+                # translatedImage.gOffset = self.bOffset #such as 0
+                # translatedImage.rOffset = self.rOffset #such as 2
+                # translatedImage.aOffset = self.aOffset #such as 3
+                translatedImage.bOffset = 0
+                translatedImage.gOffset = 1
+                translatedImage.rOffset = 2
+                translatedImage.aOffset = 3
+                # NOTE: kivy's pygame.image.fromstring(data,
+                # (self.fbo.size[0], self.fbo.size[1]), 'RGBA', True)
+                # is not at fault for channel order issue, and has correct
+                # channel order
+                translatedImage.blit_copy_with_bo(self.data, self.stride,
+                                                  self.byteDepth,
+                                                  self.size,
+                                                  self.bOffset,
+                                                  self.gOffset,
+                                                  self.rOffset,
+                                                  self.aOffset)
+                data = bytes(translatedImage.data)  # convert from bytearray
+                                                    # to bytes
+                surface = pygame.image.fromstring(data, self.size, 'RGBA',
+                                                  True)
+                pygame.image.save(surface, fileName)
+            else:
+                # Kivy 1.9.0+:
+                # data = bytes(translatedImage.data) #convert from bytearray to bytes
+                # CoreImage can load io.BytesIO but must have file header
+                translatedImage = self
+                print("  tricking Kivy so flipped warning won't matter...")
+                if not flip_enable:  # kivy texture is upside-down, so negate.
+                    print("  manually un-flipping")
+                    translatedImage = self.copy_flipped_v()
+                print("  saving...")
+                this_texture = None
+                if self.byteDepth == 4:
+                    this_texture = Texture.create(
+                        size=(self.width, self.height), colorfmt='rgba', bufferfmt='ubyte')
+                    this_texture.blit_buffer(translatedImage.data, colorfmt='rgba', bufferfmt='ubyte')
+                elif self.byteDepth == 3:
+                    this_texture = Texture.create(
+                        size=(self.width, self.height), colorfmt='rgb', bufferfmt='ubyte')
+                    this_texture.blit_buffer(translatedImage.data, colorfmt='rgb', bufferfmt='ubyte')
+                elif self.byteDepth == 1:
+                    this_texture = Texture.create(
+                        size=(self.width, self.height), colorfmt='luminance', bufferfmt='ubyte')
+                    this_texture.blit_buffer(translatedImage.data, colorfmt='luminance', bufferfmt='ubyte')
+                elif self.byteDepth == 2:
+                    this_texture = Texture.create(
+                        size=(self.width, self.height), colorfmt='luminance', bufferfmt='ushort')
+                    this_texture.blit_buffer(translatedImage.data, colorfmt='luminance', bufferfmt='ushort')
+                else:
+                    print("NOT YET IMPLEMENTED: saving with this byteDepth ("+str(self.byteDepth)+")")
+                # see https://kivy.org/docs/api-kivy.graphics.texture.html
+                # im = CoreImage(bytes(translatedImage.data), ext="png")
+                if this_texture is not None:
+                    this_texture.save(fileName)
+                    print("  saved.")
+                    # im = CoreImage(this_texture)
+                    # im.save(fileName, flipped=False)
 
             IsOK = True
-        except Exception as e:
+        except:
             IsOK = False
-            print("Could not finish saving: "+str(e))
+
+            print("Could not finish saving: ")
+            view_traceback()
 
         return IsOK
 
@@ -346,7 +471,12 @@ class KPImage(PPImage):
         if self.enableDebug:
             print("debugPixelWriteCount:"+str(debugPixelWriteCount))
 
-    def tintByColor(self, color):
+    def tintByColorInstruction(self, colorInstruction):
+        color = colorInstruction
+        self.tint_by_color_vec4( (color.b, color.g, color.r, color.a) )
+
+    def tintByColor(self, colorVec4OrVec3):
+        color = colorVec4OrVec3
         # thisPPColor = PPColor()
         # thisPPColor.setBytesFromRGBA(int(color.r*255.0+.5),
                                      # int(color.g*255.0+.5),
@@ -356,39 +486,65 @@ class KPImage(PPImage):
         source_gOffset=1
         source_rOffset=2
         source_aOffset=3
+        print("  tinting brush: "+str(color))
         if len(color) < 4:
             color = vec4_from_vec3(color, 1.0)
         di = 0  # pixelByteIndex
-        if (self.aOffset is not None):
-            for pixelIndex in range(0,self.size[0]*self.size[1]):
-                self.data[di+self.bOffset] = int(round(
-                    float(self.data[di+self.bOffset]) *
-                    color[source_bOffset]))
-                self.data[di+self.gOffset] = int(round(
-                    float(self.data[di+self.gOffset]) *
-                    color[source_gOffset]))
-                self.data[di+self.rOffset] = int(round(
-                    float(self.data[di+self.rOffset]) *
-                    color[source_rOffset]))
-                self.data[di+self.aOffset] = int(round(
-                    float(self.data[di+self.aOffset]) *
-                    color[source_aOffset]))
-                di += self.byteDepth
-        elif (self.byteDepth==3):
-            for pixelIndex in range(0,self.size[0]*self.size[1]):
-                self.data[di+self.bOffset] = int(round(
-                    float(self.data[di+self.bOffset]) *
-                    color[source_bOffset]))
-                self.data[di+self.gOffset] = int(round(
-                    float(self.data[di+self.gOffset]) *
-                    color[source_gOffset]))
-                self.data[di+self.rOffset] = int(round(
-                    float(self.data[di+self.rOffset]) *
-                    color[source_rOffset]))
-                di += self.byteDepth
-        else:
-            print("Not yet implemented KVImage tintByColor where" +
-                  " self.byteDepth=" + str(self.byteDepth))
+        try:
+            if (self.aOffset is not None):
+                for pixelIndex in range(0,self.size[0]*self.size[1]):
+                    self.data[di+self.bOffset] = int(round(
+                        float(self.data[di+self.bOffset]) *
+                        color[source_bOffset]))
+                    self.data[di+self.gOffset] = int(round(
+                        float(self.data[di+self.gOffset]) *
+                        color[source_gOffset]))
+                    self.data[di+self.rOffset] = int(round(
+                        float(self.data[di+self.rOffset]) *
+                        color[source_rOffset]))
+                    self.data[di+self.aOffset] = int(round(
+                        float(self.data[di+self.aOffset]) *
+                        color[source_aOffset]))
+                    di += self.byteDepth
+            elif (self.byteDepth==3):
+                for pixelIndex in range(0,self.size[0]*self.size[1]):
+                    self.data[di+self.bOffset] = int(round(
+                        float(self.data[di+self.bOffset]) *
+                        color[source_bOffset]))
+                    self.data[di+self.gOffset] = int(round(
+                        float(self.data[di+self.gOffset]) *
+                        color[source_gOffset]))
+                    self.data[di+self.rOffset] = int(round(
+                        float(self.data[di+self.rOffset]) *
+                        color[source_rOffset]))
+                    di += self.byteDepth
+            else:
+                print("Not yet implemented KVImage tintByColor where" +
+                      " self.byteDepth=" + str(self.byteDepth))
+        except:
+            print("Triggered alternate tintByColor algorithm:")
+            view_traceback()
+            try:
+                di = 0
+                if (self.aOffset is not None):
+                    for pixelIndex in range(0,self.size[0]*self.size[1]):
+                        self.data[di+self.bOffset] = int(round(float(self.data[di+self.bOffset]) * color.b))
+                        self.data[di+self.gOffset] = int(round(float(self.data[di+self.gOffset]) * color.g))
+                        self.data[di+self.rOffset] = int(round(float(self.data[di+self.rOffset]) * color.r))
+                        self.data[di+self.aOffset] = int(round(float(self.data[di+self.aOffset]) * color.a))
+                        di += self.byteDepth
+                elif (self.byteDepth==3):
+                    for pixelIndex in range(0,self.width*self.height):
+                        self.data[di+self.bOffset] = int( float(self.data[di+self.bOffset]) * color.b + .5 )  #+ .5 for rounding
+                        self.data[di+self.gOffset] = int( float(self.data[di+self.gOffset]) * color.g + .5 )  #+ .5 for rounding
+                        self.data[di+self.rOffset] = int( float(self.data[di+self.rOffset]) * color.r + .5 )  #+ .5 for rounding
+                        di += self.byteDepth
+                else:
+                    print("Not yet implemented KVImage tintByColor where self.byteDepth="+str(self.byteDepth))
+
+            except:
+                print("Could not finish KVImage tintByColor: color="+str(color))
+                view_traceback()
 
 if __name__ == "__main__":
     print("This module should be imported by your program.")

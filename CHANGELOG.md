@@ -2,8 +2,28 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased] - 2019-06-28
+(Continue to manually merge diff from accidentally missed from
+local version on personal cloud based on first working version or so;
+mostly in kivypixels.py)
+### ToDo
+- audit use of init to ensure correct params
+  (since deleted trailing ,KPImage.defaultByteDepth,None params)
+### Added
+- tintByColorInstruction (formerly tint_by_color_instruction)
+
+### Changed
+- In load_image, and load, detect Kivy 1.8 to 1.9 changes
+- improvements to tintByColor (had been renamed tint_by_color_vec4 in ownCloud branch) 
+
+### Removed
+- Apparently redundant 
+  drawFromKivyImage_ToTopLeft_FillRestWithTransparent`
+  from ownCloud branch (see unused/deprecated.md)
+
+## [Unreleased] - 2019-06-28
 (Manually merge diff from accidentally missed from local
-version on personal cloud based on first working version or so)
+version on personal cloud based on first working version or so;
+mostly in pythonpixels.py)
 ### ToDo
 - use `view_traceback` from common.py
 - optionally forcefully flip during save (workaround for Kivy
@@ -47,6 +67,7 @@ version on personal cloud based on first working version or so)
     to `draw_line_ivec3_v` and `_draw_line_ivec3_v`
   - Rename `set_at` to `set_ivec3_at`.
   - Rename `set_at_from_float_color` to `set_at_from_fvec`.
+  - Rename `static_createFromImageFile` to `load_image`
 - Rename `FillAllDestructivelyUsingColorBytes` to `fill_icolor`
 - Account for more conversion situations in `blit_copy_with_bo`
 - Rename may dynamic variables in many methods so they have shorter names
