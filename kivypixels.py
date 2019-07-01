@@ -1,7 +1,9 @@
+import os
+import io
+import time
+
 import kivy
-from pythonpixels import PPImage, PPColor
 from kivy.resources import resource_find
-from common import *
 # from pythonpixels import PPColor
 from kivy.core.image import Image as CoreImage
 from kivy.graphics.texture import Texture
@@ -16,11 +18,8 @@ except:
     pass
 #except Exception as e:
 #    print("Could not finish importing pygame:"+str(e))
-
-import io
 #from kivy.uix.image import Image
 from kivy.core.image import Image as CoreImage
-
 #try:
 #    #kivy 1.9.0 way:
 #    import io
@@ -28,9 +27,12 @@ from kivy.core.image import Image as CoreImage
 #    #from kivy.core.image import Image as CoreImage
 #except:
 #    pass
-import os
 
+from common import *
+from pythonpixels import PPImage, PPColor, vec4_from_vec3
 from pythonpixels import bufferToTupleStyleString
+
+
 
 def get_ext_lower(path):
     fileName, fileExtension = os.path.splitext(path)
@@ -83,9 +85,9 @@ def load_image(self,fileName):
                 #im = CoreImage(compressed_data, ext=this_ext, filename=fileName, keep_data=True)
                 im = im = CoreImage(fileName, keep_data=True)
                 participle = "accessing Kivy 1.9 image attributes (after parsing "+this_ext+" format)"
-                returnKVI = KPImage(im.width, im.height, KPImage.defaultByteDepth)
+                returnKVI = KPImage((im.width, im.height))
                 returnKVI.enableDebug = True
-                returnKVI.drawFromKivyImage_ToTopLeft_FillRestWithTransparent(im)
+                returnKVI.drawKivyImage(im)
         else:
             print("ERROR in kivypixels.load_image:"
                   + " file '" + fileName + "' does not exist")
@@ -178,10 +180,10 @@ class KPImage(PPImage):
                     # im = CoreImage(compressed_data, ext=this_ext, filename=fileName, keep_data=True)
                     im = CoreImage(fileName, keep_data=True)
                     participle = "accessing Kivy 1.9 image attributes (after parsing "+this_ext+" format)"
-                    self.init(im.width, im.height, KPImage.defaultByteDepth, None)
+                    self.init((im.width, im.height))
                     self.enableDebug = True
                     participle = "reading pixels from Kivy 1.9 image (after parsing "+this_ext+" format)"
-                    self.drawFromKivyImage_ToTopLeft_FillRestWithTransparent(im)
+                    self.drawKivyImage(im)
             else:
                 print("ERROR in KivyPixels.static_createFromImageFile: file \""+fileName+"\"does not exist")
         #except Exception as e:
@@ -190,8 +192,8 @@ class KPImage(PPImage):
             print("Could not finish "+participle+" in static_createFromImageFile:")
             view_traceback()
 
-    def get_new(self, width, height, byteDepth):
-        return KPImage(width, height, byteDepth)
+    def getNew(self, size, byteDepth=4):
+        return KPImage(size, byteDepth=byteDepth)
 
     def saveAs(self, fileName, flip_enable=False):
         IsOK = None
@@ -219,11 +221,11 @@ class KPImage(PPImage):
 
             if (self.enableDebug):
                 debugX = 3
-                debugY = self.height - 3
-                if (debugX>=self.width):
-                    debugX=self.width-1
-                if (debugY>=self.height):
-                    debugY=self.height-1
+                debugY = self.size[1] - 3
+                if (debugX>=self.size[0]):
+                    debugX=self.size[0]-1
+                if (debugY>=self.size[1]):
+                    debugY=self.size[1]-1
                 debugIndex = debugY*self.stride + debugX*self.byteDepth
                 print("debug pixel at (" + str(debugX) + ","
                       + str(debugY) + "): "
@@ -279,19 +281,19 @@ class KPImage(PPImage):
                 this_texture = None
                 if self.byteDepth == 4:
                     this_texture = Texture.create(
-                        size=(self.width, self.height), colorfmt='rgba', bufferfmt='ubyte')
+                        size=self.size, colorfmt='rgba', bufferfmt='ubyte')
                     this_texture.blit_buffer(translatedImage.data, colorfmt='rgba', bufferfmt='ubyte')
                 elif self.byteDepth == 3:
                     this_texture = Texture.create(
-                        size=(self.width, self.height), colorfmt='rgb', bufferfmt='ubyte')
+                        size=self.size, colorfmt='rgb', bufferfmt='ubyte')
                     this_texture.blit_buffer(translatedImage.data, colorfmt='rgb', bufferfmt='ubyte')
                 elif self.byteDepth == 1:
                     this_texture = Texture.create(
-                        size=(self.width, self.height), colorfmt='luminance', bufferfmt='ubyte')
+                        size=self.size, colorfmt='luminance', bufferfmt='ubyte')
                     this_texture.blit_buffer(translatedImage.data, colorfmt='luminance', bufferfmt='ubyte')
                 elif self.byteDepth == 2:
                     this_texture = Texture.create(
-                        size=(self.width, self.height), colorfmt='luminance', bufferfmt='ushort')
+                        size=self.size, colorfmt='luminance', bufferfmt='ushort')
                     this_texture.blit_buffer(translatedImage.data, colorfmt='luminance', bufferfmt='ushort')
                 else:
                     print("NOT YET IMPLEMENTED: saving with this byteDepth ("+str(self.byteDepth)+")")
@@ -351,12 +353,12 @@ class KPImage(PPImage):
         aOffset = self.aOffset
 
         # brushBuffer_byteDepth = 4
-        # brushBuffer_stride = int(self.brushImage.width) *
+        # brushBuffer_stride = int(self.brushImage.size[0]) *
                              # brushBuffer_byteDepth
         src = self.brushImage.data  # self.brushPixels
         # d_bi:
         di = destY * self.stride + destX * self.byteDepth
-        destLineStartIndex = di
+        dstLSI = di  # destLineStartIndex
         if self.enableDebug:
             print()
             print("self.brushImage.size:" +
@@ -368,13 +370,13 @@ class KPImage(PPImage):
             print("self.byteDepth:" + str(self.byteDepth))
             print("d_bi:" + str(di))
 
-        sourceLineStartIndex = 0
+        srcLSI = 0
         debugPixelWriteCount = 0
         try:
             for sourceY in range(0,int(self.brushImage.size[1])):
                 #destX = destLineStartX
-                di = destLineStartIndex
-                si = sourceLineStartIndex  # s_bi
+                di = dstLSI
+                si = srcLSI  # s_bi
                 for sourceX in range(0,int(self.brushImage.size[0])):
                     sab = src[si + aOffset]  # src_a_i
                     # src_a:
@@ -439,8 +441,8 @@ class KPImage(PPImage):
                     di += self.byteDepth
                     si += self.brushImage.byteDepth
                 #destY += 1
-                destLineStartIndex += self.stride
-                sourceLineStartIndex += self.brushImage.stride
+                dstLSI += self.stride
+                srcLSI += self.brushImage.stride
         #except:
         except Exception as e:
             print("Could not finish brushAt: "+str(e))
@@ -471,9 +473,69 @@ class KPImage(PPImage):
         if self.enableDebug:
             print("debugPixelWriteCount:"+str(debugPixelWriteCount))
 
+
+    def drawKivyImage(self, thisKivyImage):
+        maxAlpha = 0
+        sourcePixelCount = 0
+        #source image channel offsets:
+        bOffset = 0
+        gOffset = 1
+        rOffset = 2
+        aOffset = 3
+        dest_line_byte_index = 0
+        dest_pixel_byte_index = 0
+        participle = "reading pixels"
+        result_string = "FAIL"
+        try:
+            dest_line_byte_index = 0
+            for y in range(self.size[1]):
+                participle = "(no pixel yet)"
+                dest_pixel_byte_index = dest_line_byte_index
+                if (y<thisKivyImage.size[1]):
+                    for x in range(self.size[0]):
+                        if (x<thisKivyImage.size[0]):
+                            participle = "reading pixel"
+                            color = thisKivyImage.read_pixel(x,y)
+                            participle = "copying channels"
+                            #+.5 for rounding:
+                            thisA = int(255.0*color[aOffset]+.5)
+                            self.data[dest_pixel_byte_index + self.bOffset] = int(255.0*color[bOffset]+.5)
+                            self.data[dest_pixel_byte_index + self.gOffset] = int(255.0*color[gOffset]+.5)
+                            self.data[dest_pixel_byte_index + self.rOffset] = int(255.0*color[rOffset]+.5)
+                            self.data[dest_pixel_byte_index + self.aOffset] = thisA
+                            participle = "after reading channels"
+                            sourcePixelCount += 1
+                            if (thisA>maxAlpha):
+                                maxAlpha = thisA
+                        else:
+                            self.data[dest_pixel_byte_index + self.bOffset] = 0
+                            self.data[dest_pixel_byte_index + self.gOffset] = 0
+                            self.data[dest_pixel_byte_index + self.rOffset] = 0
+                            self.data[dest_pixel_byte_index + self.aOffset] = 0
+                        dest_pixel_byte_index += self.byteDepth
+                else:
+                    for x in range(thisKivyImage.size[0]):
+                        self.data[dest_pixel_byte_index + self.bOffset] = 0
+                        self.data[dest_pixel_byte_index + self.gOffset] = 0
+                        self.data[dest_pixel_byte_index + self.rOffset] = 0
+                        self.data[dest_pixel_byte_index + self.aOffset] = 0
+                        dest_pixel_byte_index += self.byteDepth
+                dest_line_byte_index += self.stride
+            result_string = "OK"
+        #except Exception as e:
+        #    print("Could not finish "+participle+" drawKivyImage: "+str(e))
+        except:
+            print("Could not finish "+participle+" drawKivyImage: ")
+            view_traceback()
+            print("dump:")
+            print(self.get_dump())
+        if self.enableDebug:
+            print("drawKivyImage..."+result_string+" {sourcePixelCount:"+str(sourcePixelCount)+"; maxAlpha:"+str(maxAlpha)+"; dest_line_byte_index:"+str(dest_line_byte_index)+"; dest_pixel_byte_index:"+str(dest_pixel_byte_index)+"}")
+            print()
+
     def tintByColorInstruction(self, colorInstruction):
         color = colorInstruction
-        self.tint_by_color_vec4( (color.b, color.g, color.r, color.a) )
+        self.tintByColor( (color.b, color.g, color.r, color.a) )
 
     def tintByColor(self, colorVec4OrVec3):
         color = colorVec4OrVec3
@@ -534,7 +596,7 @@ class KPImage(PPImage):
                         self.data[di+self.aOffset] = int(round(float(self.data[di+self.aOffset]) * color.a))
                         di += self.byteDepth
                 elif (self.byteDepth==3):
-                    for pixelIndex in range(0,self.width*self.height):
+                    for pixelIndex in range(0,self.size[0]*self.size[1]):
                         self.data[di+self.bOffset] = int( float(self.data[di+self.bOffset]) * color.b + .5 )  #+ .5 for rounding
                         self.data[di+self.gOffset] = int( float(self.data[di+self.gOffset]) * color.g + .5 )  #+ .5 for rounding
                         self.data[di+self.rOffset] = int( float(self.data[di+self.rOffset]) * color.r + .5 )  #+ .5 for rounding
@@ -547,7 +609,6 @@ class KPImage(PPImage):
                 view_traceback()
 
 if __name__ == "__main__":
-    print("This module should be imported by your program.")
     print("  tests:")
     size = (128, 128)
     src_img = KPImage(size)
@@ -567,4 +628,6 @@ if __name__ == "__main__":
         src_img.byteDepth, src_img.size, src_img.bOffset,
         src_img.gOffset, src_img.rOffset, src_img.aOffset)
     print("  done testing kivypixels.")
+    print("This module should be imported by your program.")
+    time.sleep(5)
 

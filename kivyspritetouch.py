@@ -4,59 +4,14 @@ KivySpriteTouch
 based on http://kivy.org/docs/examples/gen__canvas__fbo_canvas__py.html
 
 '''
+#import kivy
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.colorpicker import ColorPicker
+# from kivy.uix.colorpicker import ColorPicker
 from kivy.uix.button import Button
 from kivy.uix.popup import Popup
+import os
+from kivy.graphics.instructions import InstructionGroup
 
-'''
-# TODO: Animated Sprites
-# see http://kivy.org/docs/api-kivy.uix.image.html
-animatedImage = Image(source='animated.gif')
-# animatedImage = AsyncImage(source='animated.gif')
-# options:
-# allow_stretch=True #default is False
-# keep_ratio=False #default is True
-# color = Color(rMultiplier, gMultiplier, bMultiplier, aMultiplier)
-    # # ListProperty; default is [1,1,1,1]
-# keep_data = True  # keeps the raw pixels such as for pixel-based
-    # # collision detection; default is False
-# anim_delay=-1 #-1 is stop; default is .25 (4fps)
-# animatedImage.reload() #if file was loaded, you can reload it
-# anim_loop=1 #0 is infinite
-
-
-'''
-
-'''
-
-this program does not use kv language such as:
-<ColorSelector>:
-    color: 1, 1, 1, 1
-    title: 'Color Selector'
-    content:content
-    BoxLayout:
-        id: content
-        orientation: 'vertical'
-        ColorPicker:
-            id: clr_picker
-            color: root.color
-            on_touch_up:
-                root.color = clr_picker.color
-                root.dismiss()
-        BoxLayout:
-            size_hint_y: None
-            height: '27sp'
-            Button:
-                text: 'ok'
-                on_release:
-                    root.color = clr_picker.color
-                    root.dismiss()
-            Button:
-                text: 'cancel'
-                on_release: root.dismiss()
-
-'''
 __all__ = ('PixelWidget', )
 
 from kivy.graphics import Color, Rectangle, Canvas
@@ -84,9 +39,9 @@ from kivy.graphics import Fbo, ClearColor, ClearBuffers
 
 #from pythonpixels import PPImage
 #from pythonpixels import PPColor
-from kivypixels import KPImage
+from kivypixels import KPImage, load_image
 #class MainForm(BoxLayout):
-from pythonpixels import vec4_from_vec3, bgr_from_hex
+from pythonpixels import vec4_from_vec3, ibgr_from_hex
 
 class PixelWidget(Widget):
     enableDebug = False
@@ -104,9 +59,11 @@ class PixelWidget(Widget):
 
     saveButton = None
 
-    brushPaletteIndex = None
+    colorI = None
     # brushFileName = "brushTrianglePointingDown-25percent.png"
-
+    _brush_color = None
+    brushOriginalImage = None
+    brushImage = None
     paletteWidget = None
 
     def __init__(self, **kwargs):
@@ -126,57 +83,69 @@ class PixelWidget(Widget):
         self.texture = self.fbo.texture
 
         self.viewImage = KPImage(self.fbo.size)
-        # self.viewImage.fill_icolor(0, 0, 0,
-                                                           # 255)
+        # Since in kivy's pygame.image.fromstring(data, (self.fbo.size[0], self.fbo.size[1]), 'RGBA', True)
+        #   saves with odd (errant??) byte order,
+        #   channel offsets are:
+        self.viewImage_bOffset = 2 #bOffset = 0 #blue comes from green channel
+        self.viewImage_gOffset = 0 #gOffset = 1 #green comes from blue channel
+        self.viewImage_rOffset = 1 #rOffset = 2
+        self.viewImage_aOffset = 3 #aOffset = 3
+        self.viewImage.bOffset=self.viewImage_bOffset
+        self.viewImage.gOffset=self.viewImage_gOffset
+        self.viewImage.rOffset=self.viewImage_rOffset
+        self.viewImage.aOffset=self.viewImage_aOffset
+
+        # self.viewImage.fill_icolor(0, 0, 0, 255)
         print("size:"+str(self.viewImage.size))
         # print("TOTALBYTECOUNT:"+str(self.TOTALBYTECOUNT))
         # print("TOTALPIXELCOUNT:"+str(self.TOTALPIXELCOUNT))
+
         self.viewImage.setBrushPath("brush2.png")
-        self.viewImage.setBrushColor(bgr_from_hex('FFFFFF'))
-        # self.brushImage = Image(source=self.brushFileName,
-                                # keep_data=True)
+        self.viewImage.setBrushColor((1,1,1,1))
+        # self.brushImage = Image(source=self.brushFileName, keep_data=True)
         # self.brushImage = CoreImage(self.brushFileName)
 
         # self.brushTexture = self.brushImage.texture
+
+        self.palettes = {}
         # CGA palette names:
-        self.names = ["black", "blue", "green", "cyan",
+        self.palettes["CGA"] = ["black", "blue", "green", "cyan",
                       "red", "magenta", "brown", "light gray",
                       "gray", "light blue", "light green", "light cyan",
                       "light red", "light magenta", "yellow", "white"]
         # CGA palette:
         self.paletteColors = {}
-        self.paletteColors['black'] = bgr_from_hex('000000')
-        self.paletteColors['blue'] = bgr_from_hex('0000AA')
-        self.paletteColors['green'] = bgr_from_hex('00AA00')
-        self.paletteColors['cyan'] = bgr_from_hex('00AAAA')
-        self.paletteColors['red'] = bgr_from_hex('AA0000')
-        self.paletteColors['magenta'] = bgr_from_hex('AA00AA')
-        self.paletteColors['brown'] = bgr_from_hex('AA5500')
+        self.paletteColors['black'] = ibgr_from_hex('000000')
+        self.paletteColors['blue'] = ibgr_from_hex('0000AA')
+        self.paletteColors['green'] = ibgr_from_hex('00AA00')
+        self.paletteColors['cyan'] = ibgr_from_hex('00AAAA')
+        self.paletteColors['red'] = ibgr_from_hex('AA0000')
+        self.paletteColors['magenta'] = ibgr_from_hex('AA00AA')
+        self.paletteColors['brown'] = ibgr_from_hex('AA5500')
             # or sometimes dark yellow AAAA00 such as early RCA monitors
-        self.paletteColors['light gray'] = bgr_from_hex('AAAAAA')
-        self.paletteColors['gray'] = bgr_from_hex('555555')
-        self.paletteColors['light blue'] = bgr_from_hex('5555FF')
-        self.paletteColors['light green'] = bgr_from_hex('55FF55')
-        self.paletteColors['light cyan'] = bgr_from_hex('55FFFF')
-        self.paletteColors['light red'] = bgr_from_hex('FF5555')
-        self.paletteColors['light magenta'] = bgr_from_hex('FF55FF')
-        self.paletteColors['yellow'] = bgr_from_hex('FFFF55')
-        self.paletteColors['white'] = bgr_from_hex('FFFFFF')
-
+        self.paletteColors['light gray'] = ibgr_from_hex('AAAAAA')
+        self.paletteColors['gray'] = ibgr_from_hex('555555')
+        self.paletteColors['light blue'] = ibgr_from_hex('5555FF')
+        self.paletteColors['light green'] = ibgr_from_hex('55FF55')
+        self.paletteColors['light cyan'] = ibgr_from_hex('55FFFF')
+        self.paletteColors['light red'] = ibgr_from_hex('FF5555')
+        self.paletteColors['light magenta'] = ibgr_from_hex('FF55FF')
+        self.paletteColors['yellow'] = ibgr_from_hex('FFFF55')
+        self.paletteColors['white'] = ibgr_from_hex('FFFFFF')
+        self.updateColorNames()
 
 
 
         # self.brushFboWidgetSimple = FboWidgetSimple()
         # self.add_widget(self.brushFboWidgetSimple)
-        # self.brushFboWidgetSimple.width = self.brushImage.width
-        # self.brushFboWidgetSimple.height = self.brushImage.height
+        # self.brushFboWidgetSimple.size = self.brushImage.size
         # TODO: see if Kivy app can use pygame.sprite.Sprite
         # self.brushPixels = self.brushSurface.tostring()
 
         # brushFboRectangle = Rectangle(
             # texture=self.brushTexture,
             # pos=(0,0),
-            # size=(self.brushImage.width,self.brushImage.height))
+            # size=self.brushImage.size)
         # self.brushFboWidgetSimple.fbo.add(brushFboRectangle)
 
 
@@ -210,6 +179,11 @@ class PixelWidget(Widget):
         # super(PixelWidget, self).remove_widget(*largs)
         # self.canvas = canvas
 
+    def updateColorNames(self):
+        self.colorNames = []
+        for k, v in self.paletteColors.items():
+            self.colorNames.append(k)
+
     def updatePixelViewSize(self):
         if ((self.fbo.size[0]!=self.viewImage.size[0]) or
                 (self.fbo.size[1]!=self.viewImage.size[1])):
@@ -217,6 +191,11 @@ class PixelWidget(Widget):
             newKPImage.blit_copy(self.viewImage)
             newKPImage.copyRuntimeVarsByRefFrom(self.viewImage)
             self.viewImage = newKPImage
+            self.viewImage.bOffset=self.viewImage_bOffset
+            self.viewImage.gOffset=self.viewImage_gOffset
+            self.viewImage.rOffset=self.viewImage_rOffset
+            self.viewImage.aOffset=self.viewImage_aOffset
+
 
             print("size:" + str(self.viewImage.size))
             # print("TOTALBYTECOUNT:" + str(self.TOTALBYTECOUNT))
@@ -226,14 +205,19 @@ class PixelWidget(Widget):
         self.fbo.size = value
         self.texture = self.fbo.texture
         self.fbo_rect.size = value
+        tenthOfW = int(self.fbo_rect.size[0] / 10)
+        if tenthOfW < 1:
+            tenthOfW = 1
+        tenthOfH = int(self.fbo_rect.size[1] / 10)
+        if tenthOfH < 1:
+            tenthOfH = 1
 
         if (self.saveButton is not None):
-            self.saveButton.width=self.fbo_rect.size[0]/5
-            self.saveButton.height=self.fbo_rect.size[1]/10
+            self.saveButton.width = tenthOfW * 2
+            self.saveButton.height = tenthOfH
         # if (self.brushImage is not None):
-        #     pass
-            # self.brushImage.width=self.fbo_rect.size[0]/10
-            # self.brushImage.height=self.brushImage.width
+            # pass
+            # self.brushImage.size = (tenthOfW, tenthOfW)
         self.updatePixelViewSize()
         self.uploadBufferToTexture()
 
@@ -246,30 +230,53 @@ class PixelWidget(Widget):
     def on_alpha(self, instance, value):
         self.fbo_color.rgba = (1, 1, 1, value)
 
-    def setBrushColor_to_next_in_palette(self):
-        if (self.brushPaletteIndex is None):
-            self.brushPaletteIndex = 0
+    def setBrushColorToNextInPalette(self, forward=True):
+        if (self.colorI is None):
+            self.colorI = 0
         else:
-            self.brushPaletteIndex += 1
-        if (self.brushPaletteIndex>=len(self.names)):
-            self.brushPaletteIndex=0
-        self.viewImage.setBrushColor(
-            self.paletteColors[self.names[self.brushPaletteIndex]])
+            if forward:
+                self.colorI += 1
+            else:
+                self.colorI -= 1
+        if (self.colorI>=len(self.colorNames)):
+            self.colorI=0
+        elif (self.colorI<0):
+            self.colorI = len(self.colorNames) - 1
+        selectedColor = self.paletteColors[self.colorNames[self.colorI]]
+        print("Selected color " + str(self.colorI) + ": " + str(selectedColor))
+        self.viewImage.setBrushColor(selectedColor)
 
     def on_touch_down(self, touch):
         super(PixelWidget, self).on_touch_down(touch)
-        # self.setBrushColor_to_next_in_palette()
-        color = self.paletteWidget.pickedColor
-        # color3 = color.r/255.0, color.g/255.0, color.b/255.0
-        # color3 = self.paletteWidget.pickedColor.rgb
-        color3 = color[0], color[1], color[2]
-        # print("pickedColor: " + str(color3))
-        self.viewImage.setBrushColor(color3)
-        self.viewImage.brushAt(touch.x-self.pos[0], touch.y-self.pos[1])
-        self.uploadBufferToTexture()
+        #if touch.button == "scrollup":
+        #    self.setBrushColorToNextInPalette(True)
+        #elif touch.button == "scrolldown":
+        #    self.setBrushColorToNextInPalette(False)
+        # # self.setBrushColorToNextInPalette()
+        # color = self.paletteWidget.pickedColor
+        # # color3 = color.r/255.0, color.g/255.0, color.b/255.0
+        # # color3 = self.paletteWidget.pickedColor.rgb
+        # color3 = color[0], color[1], color[2]
+        # # print("pickedColor: " + str(color3))
+        if touch.button == "middle":
+            # TODO: fix this (use manually-managed pixel widget)
+            self.paletteWidget.open()
+            self.paletteWidget.adjust_rects()
+        else:
+            print("touch.button:"+str(touch.button))
+            if str(touch.button) == "scrollup":
+                self.setBrushColorToNextInPalette(forward=False)
+            elif str(touch.button) == "scrolldown":
+                self.setBrushColorToNextInPalette()
+            # else:
+                # self.setBrushColor(self.paletteWidget.pickedColor)
+            # self.brushAt(touch.x-self.pos[0], touch.y-self.pos[1])
+            self.viewImage.brushAt(touch.x-self.pos[0], touch.y-self.pos[1])
+            self.uploadBufferToTexture()
 
     def on_touch_move(self, touch):
         super(PixelWidget, self).on_touch_move(touch)
+        # self.brushAt(touch.x-self.pos[0], touch.y-self.pos[1])
         self.viewImage.brushAt(touch.x-self.pos[0], touch.y-self.pos[1])
         self.uploadBufferToTexture()
 
@@ -296,8 +303,8 @@ class PixelWidget(Widget):
             if self.brushImage is not None:
                 self.brushImage.saveAs("debug-save-brush.png")
 
-    def onColorButtonClick(self,instance):
-        self.paletteWidget.open()
+   # def onColorButtonClick(self,instance):
+       # self.paletteWidget.open()
 
 #     def onEraserButtonClick(self, instance):
 #         #TODO: finish this
@@ -305,53 +312,107 @@ class PixelWidget(Widget):
 
 class ColorPopup(Popup):
     # ends up as ObservableList, not Color for some reason:
-    # pickedColor = Color(1,1,1,1)
-    pickedColor = (1.0,1.0,1.0,1.0)
+    pickedColor = Color(1,1,1,1)
+    # pickedColor = (1.0, 1.0, 1.0, 1.0)
     title = "Color Selector"
     mainBoxLayout = None
-    mainColorPicker = None
+    # mainColorPicker = None
     buttonBoxLayout = None
     okButton = None
     cancelButton = None
+    row_lists = None
     #isStillPushingColorButton = None
     #content = content
+
+    def adjust_rects(self):
+        if self.row_lists is not None:
+            self.free_widget.size = self.mainBoxLayout.size
+            self.free_widget.pos = self.mainBoxLayout.pos
+            cell_w = self.free_widget.size[0] / 16
+            cell_h = self.free_widget.size[1] / 16
+            print("adjust_rects...")
+            print("  self.free_widget.size: "+str(self.free_widget.size))
+            print("  cell size:"+str( (cell_w, cell_h) ))
+            for y in range(0,16):
+                for x in range(0,16):
+                    #self.row_lists[y][x]["rect"].pos = (x*cell_w, y*cell_h)
+                    #self.row_lists[y][x]["rect"].size = (cell_w, cell_h)
+                    self.row_lists[y][x].pos = (x*cell_w, y*cell_h)
+                    self.row_lists[y][x].size = (cell_w, cell_h)
+                    print("Color: "+str(self.row_lists[y][x].id))
+                    #print("Color: "+str( (self.row_lists[y][x]["ci"].r, \
+                    #                      self.row_lists[y][x]["ci"].g, \
+                    #                      self.row_lists[y][x]["ci"].b ) ) )
+
     def __init__(self, **kwargs):
         super(ColorPopup, self).__init__(**kwargs)
-
+        self.row_lists = list()
         self.mainBoxLayout = BoxLayout(orientation='vertical')
         self.add_widget(self.mainBoxLayout)
         #self.isStillPushingColorButton = True
 
-        self.mainColorPicker = ColorPicker()
+        # self.mainColorPicker = ColorPicker()
         #self.mainColorPicker.color = self.pickedColor
-        self.mainBoxLayout.add_widget(self.mainColorPicker)
+        # self.mainBoxLayout.add_widget(self.mainColorPicker)
 
         self.buttonBoxLayout = BoxLayout(orientation='horizontal')
         self.buttonBoxLayout.size_hint=(1.0,.2)
         self.mainBoxLayout.add_widget(self.buttonBoxLayout)
 
+        self.colors_v_layout = BoxLayout(orientation='vertical')
+        self.free_widget = Factory.FloatLayout(size_hint=(1.0, 1.0), size=self.mainBoxLayout.size)
+        #self.mainBoxLayout.add_widget(self.colors_v_layout)
+        self.mainBoxLayout.add_widget(self.free_widget)
+        cell_w = self.free_widget.size[0] / 16
+        cell_h = self.free_widget.size[1] / 16
+        for y in range(0,16):
+            #this_h_layout = BoxLayout(orientation='horizontal')
+            #self.colors_v_layout.add_widget(this_h_layout)
+            this_list = list()
+            for x in range(0,16):
+                color = [x*16.0/256.0,y*16.0/256.0,0, 1.0]
+                #this_rect = Rectangle(pos=(x*cell_w,y*cell_h), \
+                #                      size=(cell_w,cell_h) \
+                #                      )
+                #_color_instruction = Color(r=color[0], g=color[1], b=color[2], a=1.0)
+                #self.free_widget.canvas.add(_color_instruction)
+                #self.free_widget.canvas.add(this_rect)
+                this_button = Factory.Button(id=str(color), background_color=color)
+                self.free_widget.add_widget(this_button)
+                #this_button.canvas_before.add(_color_instruction)
+                #this_dict = dict()
+                #this_dict["rect"] = this_rect
+                #this_dict["ci"] = _color_instruction
+                print("C:"+str(color))
+                #print(" == Color: "+str( (_color_instruction.r, \
+                #                         _color_instruction.g, \
+                #                          _color_instruction.b ) ) )
+                #this_list.append(this_dict)
+                this_list.append(this_button)
+                #this_h_layout.add_widget(Rectangle(color=(x,y,128)))
+            self.row_lists.append(this_list)
 
-        self.okButton = Button(text="OK")
-        self.okButton.bind(on_press=self.onOKButtonClick)
-        self.buttonBoxLayout.add_widget(self.okButton)
+        # self.okButton = Button(text="OK")
+        # self.okButton.bind(on_press=self.onOKButtonClick)
+        # self.buttonBoxLayout.add_widget(self.okButton)
 
-        self.cancelButton = Button(text="Cancel")
-        self.cancelButton.bind(on_press=self.onCancelButtonClick)
-        self.buttonBoxLayout.add_widget(self.cancelButton)
+        # self.cancelButton = Button(text="Cancel")
+        # self.cancelButton.bind(on_press=self.onCancelButtonClick)
+        # self.buttonBoxLayout.add_widget(self.cancelButton)
 
-        #self.bind(on_touch_up=self.onAnyClick)
-        #self.bind(on_dismiss=self.onDismiss)
+        # self.bind(on_touch_up=self.onAnyClick)
+        # self.bind(on_dismiss=self.onDismiss)
 
-    def onOKButtonClick(self, instance):
-        #root.dismiss()
-        self.pickedColor = self.mainColorPicker.color
-        #self.isStillPushingColorButton = True
-        self.dismiss()
-
-    def onCancelButtonClick(self, instance):
-        #root.dismiss()
-        #self.isStillPushingColorButton = True
-        self.dismiss()
+#    def onOKButtonClick(self, instance):
+#        #root.dismiss()
+#        self.pickedColor = self.mainColorPicker.color
+#        #self.isStillPushingColorButton = True
+#        self.dismiss()
+#
+#    def onCancelButtonClick(self, instance):
+#        #root.dismiss()
+#        #self.isStillPushingColorButton = True
+#        self.dismiss()
 
 #     def onAnyClick(self, touch, *largs):
 #         if not self.isStillPushingColorButton:
@@ -384,16 +445,16 @@ class KivySpriteTouchApp(App):
                                        size_hint=(.1,1.0))
         self.mainWidget.add_widget(self.buttonsLayout)
 
-        pixelWidget.paletteWidget = ColorPopup(size_hint=(.9,.5))
+        pixelWidget.paletteWidget = ColorPopup(size_hint=(.9,.8))
 
         self.saveButton = Factory.Button(text="Save", id="saveButton")
         self.buttonsLayout.add_widget(self.saveButton)
         self.saveButton.bind(on_press=pixelWidget.onSaveButtonClick)
 
-        self.colorButton = Factory.Button(text="Color",
-                                          id="colorButton")
-        self.buttonsLayout.add_widget(self.colorButton)
-        self.colorButton.bind(on_press=pixelWidget.onColorButtonClick)
+        # self.colorButton = Factory.Button(text="Color",
+                                          # id="colorButton")
+        # self.buttonsLayout.add_widget(self.colorButton)
+        # self.colorButton.bind(on_press=pixelWidget.onColorButtonClick)
 
         # self.eraserButton = Factory.Button(text="Eraser",
                                            # id="eraserButton")
@@ -404,14 +465,14 @@ class KivySpriteTouchApp(App):
         return self.mainWidget
 
     def saveBrush(self):
-        self.brushImage.saveAs("debug save (brush).png")
+        if self.brushImage is not None:
+            self.brushImage.saveAs("debug save (brush).png")
         # normalSize = self.brushImage.get_norm_image_size()
-        # self.brushImage.width = int(normalSize[0])
-        # self.brushImage.height = int(normalSize[1])
+        # self.brushImage.size = (int(normalSize[0]), int(normalSize[1]))
         # data = bytes(self.brushImage.data)
             # # convert from bytearray to bytes
         # surface = pygame.image.fromstring(data,
-            # (self.brushImage.width, self.brushImage.height),
+            # self.brushImage.size,
             # 'RGBA',
             # True)
         # pygame.image.save(surface, "debug save (brush).png")
