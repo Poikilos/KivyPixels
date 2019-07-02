@@ -28,3 +28,15 @@ If you want to manipulate pixels then upload them to a widget, this is the LGPL 
 
 ## Developer Notes
 * KivySpriteTouch was originally forked from FBO Canvas from Kivy 1.8.0 examples.
+
+### Ideas
+To save space for large sandy or grassy areas, only save:
+- bumpByte (i.e. one for grass, one for sand, etc)
+
+Then during runtime:
+- Use slightly randomized pallete
+  - greens-yellows for grass
+  - black-brown for terrain damage!
+    (for damage, edit the bump map as well)
+- Apply an over-all smoother hilly randomized bump mapping
+  - byte-based, or try area FX
