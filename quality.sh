@@ -24,7 +24,7 @@ if [ -f "$tmp_path" ]; then
 fi
 echo > "$tmp_path"
 # for name in example-cli.py setup.py testing.pyw pypicolcd/lcdframebuffer.py pypicolcd/command_line.py pypicolcd/stats.py pypicolcd/__init__.py
-for name in `ls *.py` `ls pypicolcd/*.py`
+for name in `ls *.py` `ls kivypixels/*.py`
 do
 echo "* checking '$name'..."
 pycodestyle-3 $name  >> "$tmp_path"
