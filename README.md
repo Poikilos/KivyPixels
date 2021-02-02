@@ -40,3 +40,19 @@ Then during runtime:
     (for damage, edit the bump map as well)
 - Apply an over-all smoother hilly randomized bump mapping
   - byte-based, or try area FX
+
+### Widget Anatomy
+See also:
+- ~/.local/lib/python3.9/site-packages/kivy/uix/widget.py
+
+#### Button
+```
+canvas.children:[
+    kivy.graphics.context_instructions.Color,
+    kivy.graphics.context_instructions.BindTexture,
+    kivy.graphics.vertex_instructions.BorderImage,
+    kivy.graphics.context_instructions.Color,
+    kivy.graphics.context_instructions.BindTexture,
+    kivy.graphics.vertex_instructions.Rectangle
+]
+```

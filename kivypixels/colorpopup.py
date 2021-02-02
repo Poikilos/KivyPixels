@@ -10,10 +10,17 @@ except ImportError as ex:
     exit(1)
 
 from kivy.uix.popup import Popup
-from kivy.graphics import Color  # , Rectangle
+from kivy.graphics import Color, Rectangle
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.factory import Factory
+from kivy.graphics import (Canvas, PushMatrix, PopMatrix, Translate,
+                           Scale)
+# from kivy.uix.behaviors import ButtonBehavior
+# from kivy.event import EventDispatcher
+from kivy.uix.widget import WidgetBase
+from kivy.uix.button import Button
+from kivy.properties import ColorProperty
 
 def component_to_id(component):
     return str(component).replace(".", "o")
@@ -25,6 +32,34 @@ def color_to_id(color):
             + "_" + component_to_id(color[2])
             + "_" + component_to_id(color[3]))
 
+
+class RectButton(Button):
+    plainColor = ColorProperty([1, 1, 1])
+
+    def __init__(self, **kwargs):
+        super(RectButton, self).__init__(**kwargs)
+        color = kwargs.get('color')
+        if color is not None:
+            self.plainColor = color
+        else:
+            self.plainColor = [1, 1, 1]
+        print("self.plainColor:{}".format(self.plainColor))
+        self.background_color = self.plainColor
+        with self.canvas:
+            # self.canvas.clear()
+            self.plainColor
+            Rectangle(pos=self.pos, size=self.size)
+
+'''
+    def on_press(self):
+        pass
+        print("CLICKED")
+
+    def register_event_type(self, fn):
+        # NOTE: Can't inherit from EventDispatcher since that is
+        # incompatible with other bases classes (Kivy refuses)
+        print("REGISTER {}".format(fn))
+'''
 
 class ColorPopup(Popup):
     # ends up as ObservableList, not Color for some reason:
@@ -66,8 +101,8 @@ class ColorPopup(Popup):
         '''
 
     def onChoose(self, instance):
-        print("Clicked {}".format(instance.background_color))
-        self.callback(instance.background_color)
+        print("Clicked {}".format(instance.color))
+        self.callback(instance.color)
         self.dismiss()
 
     def __init__(self, callback, **kwargs):
@@ -77,7 +112,7 @@ class ColorPopup(Popup):
         if callback is None:
             raise ValueError("You must specify a callback for"
                              " ColorPopup for when a color is chosen to"
-                             " recieve the color.")
+                             " receive the color.")
         self.row_lists = list()
         self.mainBoxLayout = BoxLayout(orientation='vertical')
         self.add_widget(self.mainBoxLayout)
@@ -126,17 +161,82 @@ class ColorPopup(Popup):
                 #self.free_widget.canvas.add(this_rect)
                 idStr = color_to_id(color)
                 size16 = 1.0 / divisor
-                this_button = Factory.Button(
-                    background_color=color,
+                # thisBtn = Factory.Button(
+                thisBtn = RectButton(
+                    # background_color=color,
+                    color=color,
                     #size_hint=(size16, size16),
                     # pos=(xPx, yPx),
                     #size=(cell_w, cell_h),
                     on_press=self.onChoose,
-                    border=(0, 0, 0, 0)
+                    # border=(0, 0, 0, 0),
                 )
+                '''
+                btnCanvas = thisBtn.canvas
+                print("dir(canvas):{}".format(dir(thisBtn.canvas)))
+                print("canvas:{}".format(thisBtn.canvas))
+                print("canvas.children:{}".format(thisBtn.canvas.children))
+                # ^ See widget anatomy in readme.
+                print("canvas.length():{}".format(thisBtn.canvas.length()))
+                good_size = None
+                good_pos = None
+
+                for i in reversed(range(thisBtn.canvas.length())):
+                    child = thisBtn.canvas.children[i]
+                    typeName = type(child).__name__
+                    print("  canvas[{}]:{}".format(i, typeName))
+                    if typeName == "BindTexture":
+                        thisBtn.canvas.remove(child)
+                    elif typeName == "Color":
+                        if i > 0:
+                            pass
+                            # thisBtn.canvas.remove(child)
+                            # ^ white
+                    elif typeName == "BorderImage":
+                        thisBtn.canvas.remove(child)
+                        # thisBtn.canvas.add(Rectangle())
+                    elif typeName == "Rectangle":
+                        print("dir(child):{}".format(dir(child)))
+                        print("child.pos:{}".format(child.pos))
+                        print("child.size:{}".format(child.size))
+                        good_pos = child.pos
+                        good_size = child.size
+                        # child.source = None
+                        # thisBtn.canvas.remove(child)
+                        # new = Rectangle(pos=good_pos, size=good_size)
+                        # thisBtn.canvas.add(new)
+                    else:
+                        pass
+                        # thisBtn.canvas.remove(child)
+
+                # size is always 0,0
+                # pos is always 50, 50
+                # children: Color, BindTexture, BorderImage, Color,
+                # BindTexture, Rectangle
+
+                # group: None
+                # exit(0)
+
+                # btnCanvas.clear()
+                # btnCanvas.add(PushMatrix())
+                thisBtn.plainColor = Color(thisBtn.background_color)
+                btnCanvas.add(thisBtn.plainColor)
+                # btnCanvas.add(Size(thisBtn.size))
+                # ^ expected kivy.graphics.instructions.Instruction, got
+                # ObservableReferenceList
+                # btnCanvas.add(Scale(thisBtn.size))
+                # btnCanvas.add(thisBtn.pos)
+                # ^ expected kivy.graphics.instructions.Instruction, got
+                # ObservableReferenceList
+                # btnCanvas.add(Translate(thisBtn.pos))
+                btnCanvas.add(Rectangle(size=good_size,
+                                        pos=good_pos))
+                # btnCanvas.add(Rectangle())
+                # btnCanvas.add(PopMatrix())
                 # id=idStr ID is not a string!
-                # self.free_widget.add_widget(this_button)
-                #this_button.canvas_before.add(_color_instruction)
+                # self.free_widget.add_widget(thisBtn)
+                #thisBtn.canvas_before.add(_color_instruction)
+                '''
                 #this_dict = dict()
                 #this_dict["rect"] = this_rect
                 #this_dict["ci"] = _color_instruction
@@ -145,9 +245,9 @@ class ColorPopup(Popup):
                 #                         _color_instruction.g, \
                 #                          _color_instruction.b ) ) )
                 #this_list.append(this_dict)
-                this_list.append(this_button)
+                this_list.append(thisBtn)
                 #this_h_layout.add_widget(Rectangle(color=(x,y,128)))
-                this_h_layout.add_widget(this_button)
+                this_h_layout.add_widget(thisBtn)
                 # xPx += cell_w
             # yPx += cell_h
             self.row_lists.append(this_list)
