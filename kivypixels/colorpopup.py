@@ -118,8 +118,8 @@ class ColorPopup(Popup):
         '''
 
     def onChoose(self, instance):
-        print("Clicked {}".format(instance.color))
-        self.callback(instance.color)
+        print("Clicked {}".format(instance.plainComponents))
+        self.callback(instance.plainComponents)
         self.dismiss()
 
     def onChangeBrightness(self, instance):
