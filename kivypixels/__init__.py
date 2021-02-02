@@ -36,11 +36,9 @@ from kivy.core.image import Image as CoreImage
 #except:
 #    pass
 
-from common import *
-from pythonpixels import PPImage, PPColor, vec4_from_vec3
-from pythonpixels import bufferToTupleStyleString
-
-
+from kivypixels.common import view_traceback
+from kivypixels.pythonpixels import PPImage, PPColor, vec4_from_vec3
+from kivypixels.pythonpixels import bufferToTupleStyleString
 
 def get_ext_lower(path):
     fileName, fileExtension = os.path.splitext(path)
@@ -617,25 +615,5 @@ class KPImage(PPImage):
                 view_traceback()
 
 if __name__ == "__main__":
-    print("  tests:")
-    size = (128, 128)
-    src_img = KPImage(size)
-    dst_img = KPImage(size)
-    print("blit_copy_with_bo 32-bit...")
-    print("  src_img: " + str(src_img.get_dict(data_enable=False)))
-    print("  dst_img: " + str(dst_img.get_dict(data_enable=False)))
-    dst_img.blit_copy_with_bo(src_img.data, src_img.stride,
-        src_img.byteDepth, src_img.size, src_img.bOffset,
-        src_img.gOffset, src_img.rOffset, src_img.aOffset)
-    print("blit_copy_with_bo grayscale...")
-    src_img = KPImage(size, byteDepth=1)
-    dst_img = KPImage(size, byteDepth=1)
-    print("  src_img: " + str(src_img.get_dict(data_enable=False)))
-    print("  dst_img: " + str(dst_img.get_dict(data_enable=False)))
-    dst_img.blit_copy_with_bo(src_img.data, src_img.stride,
-        src_img.byteDepth, src_img.size, src_img.bOffset,
-        src_img.gOffset, src_img.rOffset, src_img.aOffset)
-    print("  done testing kivypixels.")
-    print("This module should be imported by your program.")
-    time.sleep(5)
+    print("kivypixels should be imported by your program not run.")
 

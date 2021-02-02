@@ -1,6 +1,22 @@
 #!/usr/bin/env python
 
+try:
+    import kivy
+except ImportError as ex:
+    print("This program requires kivy. Try:")
+    print("python -m pip install --user --upgrade pip")
+    print("python -m pip install --user --upgrade setuptools wheel")
+    print("python -m pip install --user --upgrade kivy")
+    exit(1)
+
 from kivypixels import KPImage #, load_image
+from kivy.uix.widget import Widget
+from kivy.graphics import Fbo, ClearColor, ClearBuffers
+# from kivy.graphics.fbo import Fbo
+from kivy.properties import ObjectProperty, NumericProperty
+from kivy.graphics import Canvas, Color, Rectangle
+from kivypixels.pythonpixels import ibgr_from_hex  # , vec4_from_vec3
+
 
 class PixelWidget(Widget):
     enableDebug = False

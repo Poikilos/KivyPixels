@@ -1,11 +1,19 @@
+#!/usr/bin/env python
+
 import sys
 import traceback
 import copy
 
 verbose_enable = False
 
-#from  github.com/expertmm/minetest/chunkymap/expertmm.py, but modified for python2
 def get_dict_deepcopy(old_dict):
+    '''
+    Get a deepcopy if the param is a dict, otherwise degrade silently
+    (return None).
+
+    This is from parsing.py in github.com/poikilos/pycodetool, but
+    modified for Python 2 compatibility.
+    '''
     new_dict = None
     if type(old_dict) is dict:
         new_dict = {}
