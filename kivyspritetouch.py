@@ -47,13 +47,6 @@ from kivypixels.colorpopup import ColorPopup
 
 class KivySpriteTouchApp(App):
 
-    mainWidget = None
-    buttonsLayout = None
-
-    saveButton = None
-    colorButton = None
-    eraserButton = None
-
     def build(self):
         self.pixelWidget = None
 
@@ -66,7 +59,8 @@ class KivySpriteTouchApp(App):
                                        size_hint=(.1,1.0))
         self.mainWidget.add_widget(self.buttonsLayout)
 
-        self.paletteWidget = ColorPopup(size_hint=(.9,.8))
+        self.paletteWidget = ColorPopup(self.choseColor,
+                                        size_hint=(.9,.8))
 
         self.saveButton = Factory.Button(text="Save")
         # id="saveButton"
@@ -90,6 +84,10 @@ class KivySpriteTouchApp(App):
             # on_press=self.pixelWidget.onEraserButtonClick)
 
         return self.mainWidget
+
+    def choseColor(self, color):
+        if color is not None:
+            self.pixelWidget.viewImage.setBrushColor(color)
 
     def saveBrush(self):
         if self.brushImage is not None:

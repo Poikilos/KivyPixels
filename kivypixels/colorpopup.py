@@ -41,11 +41,15 @@ class ColorPopup(Popup):
     #content = content
 
     def adjust_rects(self):
+        return
+        '''
         if self.row_lists is not None:
-            self.free_widget.size = self.mainBoxLayout.size
-            self.free_widget.pos = self.mainBoxLayout.pos
-            cell_w = self.free_widget.size[0] / 16
-            cell_h = self.free_widget.size[1] / 16
+            # self.free_widget.size = self.mainBoxLayout.size
+            # self.free_widget.pos = self.mainBoxLayout.pos
+            # cell_w = self.free_widget.size[0] / 16
+            # cell_h = self.free_widget.size[1] / 16
+            # cell_w = self.colorsHLayouts[0].size[0] / 16
+            # cell_h = self.free_widget.size[1] / 16
             print("adjust_rects...")
             print("  self.free_widget.size: "+str(self.free_widget.size))
             print("  cell size:"+str( (cell_w, cell_h) ))
@@ -59,10 +63,21 @@ class ColorPopup(Popup):
                     #print("Color: "+str( (self.row_lists[y][x]["ci"].r, \
                     #                      self.row_lists[y][x]["ci"].g, \
                     #                      self.row_lists[y][x]["ci"].b ) ) )
+        '''
 
-    def __init__(self, **kwargs):
+    def onChoose(self, instance):
+        print("Clicked {}".format(instance.background_color))
+        self.callback(instance.background_color)
+        self.dismiss()
+
+    def __init__(self, callback, **kwargs):
         # super(ColorPopup, self).__init__(**kwargs)
         Popup.__init__(self, **kwargs)
+        self.callback = callback
+        if callback is None:
+            raise ValueError("You must specify a callback for"
+                             " ColorPopup for when a color is chosen to"
+                             " recieve the color.")
         self.row_lists = list()
         self.mainBoxLayout = BoxLayout(orientation='vertical')
         self.add_widget(self.mainBoxLayout)
@@ -76,16 +91,31 @@ class ColorPopup(Popup):
         self.buttonBoxLayout.size_hint=(1.0,.2)
         self.mainBoxLayout.add_widget(self.buttonBoxLayout)
 
+        self.cancelButton = Factory.Button(text="Close")
+        # id="cancelButton"
+        self.buttonBoxLayout.add_widget(self.cancelButton)
+        self.cancelButton.bind(on_press=self.dismiss)
+
+
         self.colors_v_layout = BoxLayout(orientation='vertical')
-        self.free_widget = FloatLayout(size_hint=(1.0, 1.0), size=self.mainBoxLayout.size)
-        #self.mainBoxLayout.add_widget(self.colors_v_layout)
-        self.mainBoxLayout.add_widget(self.free_widget)
-        cell_w = self.free_widget.size[0] / 16
-        cell_h = self.free_widget.size[1] / 16
+        self.colorsHLayouts = []
+        # self.free_widget = FloatLayout(size_hint=(1.0, 1.0), size=self.mainBoxLayout.size)
+        self.mainBoxLayout.add_widget(self.colors_v_layout)
+        # self.mainBoxLayout.add_widget(self.free_widget)
+        divisor = 16
+        # cell_w = self.free_widget.size[0] / divisor
+        # cell_h = self.free_widget.size[1] / divisor
+        # cell_w = self.colors_v_layout.width / divisor
+        # cell_h = cell_w
+        left = 0
+        yPx = 0
+        xPx = 0
         for y in range(0,16):
-            #this_h_layout = BoxLayout(orientation='horizontal')
-            #self.colors_v_layout.add_widget(this_h_layout)
+            this_h_layout = BoxLayout(orientation='horizontal')
+            self.colors_v_layout.add_widget(this_h_layout)
+            self.colorsHLayouts.append(this_h_layout)
             this_list = list()
+            xPx = left
             for x in range(0,16):
                 color = [x*16.0/256.0,y*16.0/256.0,0, 1.0]
                 #this_rect = Rectangle(pos=(x*cell_w,y*cell_h), \
@@ -95,9 +125,17 @@ class ColorPopup(Popup):
                 #self.free_widget.canvas.add(_color_instruction)
                 #self.free_widget.canvas.add(this_rect)
                 idStr = color_to_id(color)
-                this_button = Factory.Button(background_color=color)
+                size16 = 1.0 / divisor
+                this_button = Factory.Button(
+                    background_color=color,
+                    #size_hint=(size16, size16),
+                    # pos=(xPx, yPx),
+                    #size=(cell_w, cell_h),
+                    on_press=self.onChoose,
+                    border=(0, 0, 0, 0)
+                )
                 # id=idStr ID is not a string!
-                self.free_widget.add_widget(this_button)
+                # self.free_widget.add_widget(this_button)
                 #this_button.canvas_before.add(_color_instruction)
                 #this_dict = dict()
                 #this_dict["rect"] = this_rect
@@ -109,6 +147,9 @@ class ColorPopup(Popup):
                 #this_list.append(this_dict)
                 this_list.append(this_button)
                 #this_h_layout.add_widget(Rectangle(color=(x,y,128)))
+                this_h_layout.add_widget(this_button)
+                # xPx += cell_w
+            # yPx += cell_h
             self.row_lists.append(this_list)
 
         # self.okButton = Factory.Button(text="OK")
