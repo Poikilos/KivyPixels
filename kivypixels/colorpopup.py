@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import colorsys
 
 try:
     import kivy
@@ -37,18 +38,31 @@ class RectButton(Button):
     plainColor = ColorProperty([1, 1, 1])
 
     def __init__(self, **kwargs):
-        super(RectButton, self).__init__(**kwargs)
         color = kwargs.get('color')
+        super(RectButton, self).__init__(**kwargs)
         if color is not None:
-            self.plainColor = color
+            self.plainComponents = [color[0], color[1], color[2], color[3]]
         else:
-            self.plainColor = [1, 1, 1]
-        print("self.plainColor:{}".format(self.plainColor))
+            self.plainComponents = [1, 1, 1, 1]
+        self.plainColor = tuple(self.plainComponents)
+        print("type(plainColor):{}".format(type(self.plainColor).__name__))
+        # assert(type(self.plainColor).__name__ == "Color")
+        # ^ Color, but ONLY accepts list since is a ColorProperty
+        print("RectButton color:{}".format(self.color))
+        print("RectButton plainComponents:{}".format(self.plainComponents))
+        print("RectButton plainColor:{}".format(self.plainColor))
         self.background_color = self.plainColor
         with self.canvas:
             # self.canvas.clear()
             self.plainColor
             Rectangle(pos=self.pos, size=self.size)
+
+    def getColor(self):
+        if type(self.plainColor).__name__ != "Color":
+            print("WARNING: plainColor is not a Color! Try setting via tuple instead of list.")
+            return Color(self.plainColor)
+        return self.plainColor
+        # return self.background_color
 
 '''
     def on_press(self):
@@ -105,6 +119,23 @@ class ColorPopup(Popup):
         self.callback(instance.color)
         self.dismiss()
 
+    def onChangeBrightness(self, instance):
+        v = instance.plainColor[0]
+        print("clicked v:{}".format(v))
+        for y in range(len(self.row_lists)):
+            row = self.row_lists[y]
+            for x in range(len(row)):
+                h = y*16.0/256.0
+                s = x*16.0/256.0
+                a = 1.0
+                button = row[x]
+                # print("button.color:{}".format(button.color))
+                button.plainComponents = list(colorsys.hsv_to_rgb(h, s, v)) + [1.0]
+                button.plainColor = tuple(button.plainComponents)
+                button.background_color = tuple(button.plainComponents)
+                # button.plainColor = button.background_color
+
+
     def __init__(self, callback, **kwargs):
         # super(ColorPopup, self).__init__(**kwargs)
         Popup.__init__(self, **kwargs)
@@ -131,13 +162,26 @@ class ColorPopup(Popup):
         self.buttonBoxLayout.add_widget(self.cancelButton)
         self.cancelButton.bind(on_press=self.dismiss)
 
-
+        self.paletteLayout = BoxLayout(orientation='horizontal')
+        self.brightnessLayout = BoxLayout(orientation='vertical')
         self.colors_v_layout = BoxLayout(orientation='vertical')
         self.colorsHLayouts = []
         # self.free_widget = FloatLayout(size_hint=(1.0, 1.0), size=self.mainBoxLayout.size)
-        self.mainBoxLayout.add_widget(self.colors_v_layout)
-        # self.mainBoxLayout.add_widget(self.free_widget)
+        self.mainBoxLayout.add_widget(self.paletteLayout)
+        self.paletteLayout.add_widget(self.colors_v_layout)
+        self.paletteLayout.add_widget(self.brightnessLayout)
         divisor = 16
+        for i in reversed(range(divisor + 1)):
+            v = i * 16 / 256
+            color = [v, v, v, 1.0]
+            thisBtn = RectButton(
+                    color=color,
+                    on_press=self.onChangeBrightness
+            )
+            thisBtn.plainComponents = color
+            thisBtn.plainColor = tuple(thisBtn.plainComponents)
+            self.brightnessLayout.add_widget(thisBtn)
+        # self.mainBoxLayout.add_widget(self.free_widget)
         # cell_w = self.free_widget.size[0] / divisor
         # cell_h = self.free_widget.size[1] / divisor
         # cell_w = self.colors_v_layout.width / divisor
@@ -145,6 +189,8 @@ class ColorPopup(Popup):
         left = 0
         yPx = 0
         xPx = 0
+        l = 1.0
+        v = 1.0
         for y in range(0,16):
             this_h_layout = BoxLayout(orientation='horizontal')
             self.colors_v_layout.add_widget(this_h_layout)
@@ -152,7 +198,15 @@ class ColorPopup(Popup):
             this_list = list()
             xPx = left
             for x in range(0,16):
-                color = [x*16.0/256.0,y*16.0/256.0,0, 1.0]
+                # hsla = [x*16.0/256.0, y*16.0/256.0, 0, 1.0]
+                h = y*16.0/256.0
+                s = x*16.0/256.0
+                a = 1.0
+                # color = [x*16.0/256.0, y*16.0/256.0, 0, 1.0]
+                # color = list(colorsys.hls_to_rgb(h, l, s)) + [1.0]
+                # ^ always white if l is 1!
+                color = list(colorsys.hsv_to_rgb(h, s, v)) + [1.0]
+                print("COLOR:{}".format(color))
                 #this_rect = Rectangle(pos=(x*cell_w,y*cell_h), \
                 #                      size=(cell_w,cell_h) \
                 #                      )
@@ -171,7 +225,7 @@ class ColorPopup(Popup):
                     on_press=self.onChoose,
                     # border=(0, 0, 0, 0),
                 )
-                '''
+
                 btnCanvas = thisBtn.canvas
                 print("dir(canvas):{}".format(dir(thisBtn.canvas)))
                 print("canvas:{}".format(thisBtn.canvas))
@@ -180,7 +234,7 @@ class ColorPopup(Popup):
                 print("canvas.length():{}".format(thisBtn.canvas.length()))
                 good_size = None
                 good_pos = None
-
+                '''
                 for i in reversed(range(thisBtn.canvas.length())):
                     child = thisBtn.canvas.children[i]
                     typeName = type(child).__name__
@@ -219,8 +273,9 @@ class ColorPopup(Popup):
 
                 # btnCanvas.clear()
                 # btnCanvas.add(PushMatrix())
-                thisBtn.plainColor = Color(thisBtn.background_color)
-                btnCanvas.add(thisBtn.plainColor)
+                thisBtn.plainComponents = color
+                thisBtn.plainColor = tuple(thisBtn.plainComponents)
+                btnCanvas.add(thisBtn.getColor())
                 # btnCanvas.add(Size(thisBtn.size))
                 # ^ expected kivy.graphics.instructions.Instruction, got
                 # ObservableReferenceList
