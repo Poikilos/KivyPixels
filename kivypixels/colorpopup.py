@@ -21,6 +21,7 @@ from kivy.graphics import (Canvas, PushMatrix, PopMatrix, Translate,
 # from kivy.event import EventDispatcher
 from kivy.uix.widget import WidgetBase
 from kivy.uix.button import Button
+from kivy.uix.label import Label
 from kivy.properties import ColorProperty
 
 def component_to_id(component):
@@ -40,6 +41,7 @@ class RectButton(Button):
     def __init__(self, **kwargs):
         color = kwargs.get('color')
         super(RectButton, self).__init__(**kwargs)
+        self.border = [0, 0, 0, 0]
         if color is not None:
             self.plainComponents = [color[0], color[1], color[2],
                                     color[3]]
@@ -56,9 +58,10 @@ class RectButton(Button):
         print("RectButton plainColor:{}".format(self.plainColor))
         self.background_color = self.plainColor
         with self.canvas:
+            pass
             # self.canvas.clear()
-            self.plainColor
-            Rectangle(pos=self.pos, size=self.size)
+            # self.plainColor
+            # Rectangle(pos=self.pos, size=self.size)
 
     def getColor(self):
         if type(self.plainColor).__name__ != "Color":
