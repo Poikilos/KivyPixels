@@ -2,7 +2,15 @@ import os
 import io
 import time
 
-import kivy
+try:
+    import kivy
+except ImportError as ex:
+    print("This program requires kivy. Try:")
+    print("python -m pip install --user --upgrade pip")
+    print("python -m pip install --user --upgrade setuptools wheel")
+    print("python -m pip install --user --upgrade kivy")
+    raise ex
+
 from kivy.resources import resource_find
 # from pythonpixels import PPColor
 from kivy.core.image import Image as CoreImage

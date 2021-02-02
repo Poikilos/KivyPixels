@@ -4,10 +4,18 @@ KivySpriteTouch
 based on http://kivy.org/docs/examples/gen__canvas__fbo_canvas__py.html
 
 '''
-#import kivy
+try:
+    import kivy
+except ImportError as ex:
+    print("This program requires kivy. Try:")
+    print("python -m pip install --user --upgrade pip")
+    print("python -m pip install --user --upgrade setuptools wheel")
+    print("python -m pip install --user --upgrade kivy")
+    exit(1)
+
 from kivy.uix.boxlayout import BoxLayout
 # from kivy.uix.colorpicker import ColorPicker
-from kivy.uix.button import Button
+# from kivy.uix.button import Button
 from kivy.uix.popup import Popup
 import os
 from kivy.graphics.instructions import InstructionGroup
@@ -18,7 +26,7 @@ from kivy.graphics import Color, Rectangle, Canvas
 #from kivy.graphics import ClearBuffers, ClearColor
 #from kivy.graphics import Line
 #from kivy.graphics.fbo import Fbo
-#from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.floatlayout import FloatLayout
 from kivy.properties import ObjectProperty, NumericProperty
 from kivy.app import App
 #from kivy.core.window import Window
@@ -67,7 +75,8 @@ class PixelWidget(Widget):
     paletteWidget = None
 
     def __init__(self, **kwargs):
-        super(PixelWidget, self).__init__(**kwargs)
+        # super(PixelWidget, self).__init__(**kwargs)
+        Widget.__init__(self, **kwargs)
         self.canvas = Canvas()
         with self.canvas:
             self.fbo = Fbo(size=self.size)
@@ -310,6 +319,18 @@ class PixelWidget(Widget):
 #         #TODO: finish this
 #         print("eraser")
 
+
+def component_to_id(component):
+    return str(component).replace(".", "o")
+
+
+def color_to_id(color):
+    return ("color_" + component_to_id(color[0])
+            + "_" + component_to_id(color[1])
+            + "_" + component_to_id(color[2])
+            + "_" + component_to_id(color[3]))
+
+
 class ColorPopup(Popup):
     # ends up as ObservableList, not Color for some reason:
     pickedColor = Color(1,1,1,1)
@@ -345,7 +366,8 @@ class ColorPopup(Popup):
                     #                      self.row_lists[y][x]["ci"].b ) ) )
 
     def __init__(self, **kwargs):
-        super(ColorPopup, self).__init__(**kwargs)
+        # super(ColorPopup, self).__init__(**kwargs)
+        Popup.__init__(self, **kwargs)
         self.row_lists = list()
         self.mainBoxLayout = BoxLayout(orientation='vertical')
         self.add_widget(self.mainBoxLayout)
@@ -360,7 +382,7 @@ class ColorPopup(Popup):
         self.mainBoxLayout.add_widget(self.buttonBoxLayout)
 
         self.colors_v_layout = BoxLayout(orientation='vertical')
-        self.free_widget = Factory.FloatLayout(size_hint=(1.0, 1.0), size=self.mainBoxLayout.size)
+        self.free_widget = FloatLayout(size_hint=(1.0, 1.0), size=self.mainBoxLayout.size)
         #self.mainBoxLayout.add_widget(self.colors_v_layout)
         self.mainBoxLayout.add_widget(self.free_widget)
         cell_w = self.free_widget.size[0] / 16
@@ -377,13 +399,15 @@ class ColorPopup(Popup):
                 #_color_instruction = Color(r=color[0], g=color[1], b=color[2], a=1.0)
                 #self.free_widget.canvas.add(_color_instruction)
                 #self.free_widget.canvas.add(this_rect)
-                this_button = Factory.Button(id=str(color), background_color=color)
+                idStr = color_to_id(color)
+                this_button = Factory.Button(background_color=color)
+                # id=idStr ID is not a string!
                 self.free_widget.add_widget(this_button)
                 #this_button.canvas_before.add(_color_instruction)
                 #this_dict = dict()
                 #this_dict["rect"] = this_rect
                 #this_dict["ci"] = _color_instruction
-                print("C:"+str(color))
+                print("C:"+idStr)
                 #print(" == Color: "+str( (_color_instruction.r, \
                 #                         _color_instruction.g, \
                 #                          _color_instruction.b ) ) )
@@ -392,11 +416,11 @@ class ColorPopup(Popup):
                 #this_h_layout.add_widget(Rectangle(color=(x,y,128)))
             self.row_lists.append(this_list)
 
-        # self.okButton = Button(text="OK")
+        # self.okButton = Factory.Button(text="OK")
         # self.okButton.bind(on_press=self.onOKButtonClick)
         # self.buttonBoxLayout.add_widget(self.okButton)
 
-        # self.cancelButton = Button(text="Cancel")
+        # self.cancelButton = Factory.Button(text="Cancel")
         # self.cancelButton.bind(on_press=self.onCancelButtonClick)
         # self.buttonBoxLayout.add_widget(self.cancelButton)
 
@@ -429,38 +453,45 @@ class KivySpriteTouchApp(App):
 
     mainWidget = None
     buttonsLayout = None
-    pixelWidget = None
+
     saveButton = None
     colorButton = None
     eraserButton = None
 
     def build(self):
+        self.pixelWidget = None
 
         self.mainWidget = BoxLayout(orientation='horizontal')
 
-        pixelWidget = PixelWidget()
-        self.mainWidget.add_widget(pixelWidget)
+        self.pixelWidget = PixelWidget()
+        self.mainWidget.add_widget(self.pixelWidget)
 
         self.buttonsLayout = BoxLayout(orientation='vertical',
                                        size_hint=(.1,1.0))
         self.mainWidget.add_widget(self.buttonsLayout)
 
-        pixelWidget.paletteWidget = ColorPopup(size_hint=(.9,.8))
+        self.paletteWidget = ColorPopup(size_hint=(.9,.8))
 
-        self.saveButton = Factory.Button(text="Save", id="saveButton")
+        self.saveButton = Factory.Button(text="Save")
+        # id="saveButton"
         self.buttonsLayout.add_widget(self.saveButton)
-        self.saveButton.bind(on_press=pixelWidget.onSaveButtonClick)
+        self.saveButton.bind(on_press=self.pixelWidget.onSaveButtonClick)
+
+        #self.paletteButton = Factory.Button(text="Save")
+        # id="paletteButton"
+        #self.buttonsLayout.add_widget(self.paletteButton)
+        #self.paletteButton.bind(on_press=self.paletteWidget.open())
 
         # self.colorButton = Factory.Button(text="Color",
                                           # id="colorButton")
         # self.buttonsLayout.add_widget(self.colorButton)
-        # self.colorButton.bind(on_press=pixelWidget.onColorButtonClick)
+        # self.colorButton.bind(on_press=self.pixelWidget.onColorButtonClick)
 
         # self.eraserButton = Factory.Button(text="Eraser",
                                            # id="eraserButton")
         # self.buttonsLayout.add_widget(self.eraserButton)
         # self.eraserButton.bind(
-            # on_press=pixelWidget.onEraserButtonClick)
+            # on_press=self.pixelWidget.onEraserButtonClick)
 
         return self.mainWidget
 
