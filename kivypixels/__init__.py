@@ -5,7 +5,7 @@ import time
 try:
     import kivy
 except ImportError as ex:
-    print("This program requires kivy. Try:")
+    print("This module requires kivy. Try:")
     print("python -m pip install --user --upgrade pip")
     print("python -m pip install --user --upgrade setuptools wheel")
     print("python -m pip install --user --upgrade kivy")
