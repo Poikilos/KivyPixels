@@ -477,10 +477,10 @@ class KivySpriteTouchApp(App):
         self.buttonsLayout.add_widget(self.saveButton)
         self.saveButton.bind(on_press=self.pixelWidget.onSaveButtonClick)
 
-        #self.paletteButton = Factory.Button(text="Save")
+        self.paletteButton = Factory.Button(text="Palette")
         # id="paletteButton"
-        #self.buttonsLayout.add_widget(self.paletteButton)
-        #self.paletteButton.bind(on_press=self.paletteWidget.open())
+        self.buttonsLayout.add_widget(self.paletteButton)
+        self.paletteButton.bind(on_press=self.paletteWidget.open)
 
         # self.colorButton = Factory.Button(text="Color",
                                           # id="colorButton")
