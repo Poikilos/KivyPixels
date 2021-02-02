@@ -41,15 +41,18 @@ class RectButton(Button):
         color = kwargs.get('color')
         super(RectButton, self).__init__(**kwargs)
         if color is not None:
-            self.plainComponents = [color[0], color[1], color[2], color[3]]
+            self.plainComponents = [color[0], color[1], color[2],
+                                    color[3]]
         else:
             self.plainComponents = [1, 1, 1, 1]
         self.plainColor = tuple(self.plainComponents)
-        print("type(plainColor):{}".format(type(self.plainColor).__name__))
+        print("type(plainColor):{}"
+              "".format(type(self.plainColor).__name__))
         # assert(type(self.plainColor).__name__ == "Color")
         # ^ Color, but ONLY accepts list since is a ColorProperty
         print("RectButton color:{}".format(self.color))
-        print("RectButton plainComponents:{}".format(self.plainComponents))
+        print("RectButton plainComponents:{}"
+              "".format(self.plainComponents))
         print("RectButton plainColor:{}".format(self.plainColor))
         self.background_color = self.plainColor
         with self.canvas:
@@ -59,7 +62,7 @@ class RectButton(Button):
 
     def getColor(self):
         if type(self.plainColor).__name__ != "Color":
-            print("WARNING: plainColor is not a Color! Try setting via tuple instead of list.")
+            print("WARNING: plainColor is not a Color!")
             return Color(self.plainColor)
         return self.plainColor
         # return self.background_color
@@ -86,8 +89,8 @@ class ColorPopup(Popup):
     okButton = None
     cancelButton = None
     row_lists = None
-    #isStillPushingColorButton = None
-    #content = content
+    # isStillPushingColorButton = None
+    # content = content
 
     def adjust_rects(self):
         return
@@ -130,7 +133,9 @@ class ColorPopup(Popup):
                 a = 1.0
                 button = row[x]
                 # print("button.color:{}".format(button.color))
-                button.plainComponents = list(colorsys.hsv_to_rgb(h, s, v)) + [1.0]
+                button.plainComponents = (
+                    list(colorsys.hsv_to_rgb(h, s, v)) + [1.0]
+                )
                 button.plainColor = tuple(button.plainComponents)
                 button.background_color = tuple(button.plainComponents)
                 # button.plainColor = button.background_color
@@ -147,10 +152,10 @@ class ColorPopup(Popup):
         self.row_lists = list()
         self.mainBoxLayout = BoxLayout(orientation='vertical')
         self.add_widget(self.mainBoxLayout)
-        #self.isStillPushingColorButton = True
+        # self.isStillPushingColorButton = True
 
         # self.mainColorPicker = ColorPicker()
-        #self.mainColorPicker.color = self.pickedColor
+        # self.mainColorPicker.color = self.pickedColor
         # self.mainBoxLayout.add_widget(self.mainColorPicker)
 
         self.buttonBoxLayout = BoxLayout(orientation='horizontal')
@@ -166,7 +171,8 @@ class ColorPopup(Popup):
         self.brightnessLayout = BoxLayout(orientation='vertical')
         self.colors_v_layout = BoxLayout(orientation='vertical')
         self.colorsHLayouts = []
-        # self.free_widget = FloatLayout(size_hint=(1.0, 1.0), size=self.mainBoxLayout.size)
+        # self.free_widget = FloatLayout(size_hint=(1.0, 1.0),
+        # size=self.mainBoxLayout.size)
         self.mainBoxLayout.add_widget(self.paletteLayout)
         self.paletteLayout.add_widget(self.colors_v_layout)
         self.paletteLayout.add_widget(self.brightnessLayout)
@@ -207,21 +213,22 @@ class ColorPopup(Popup):
                 # ^ always white if l is 1!
                 color = list(colorsys.hsv_to_rgb(h, s, v)) + [1.0]
                 print("COLOR:{}".format(color))
-                #this_rect = Rectangle(pos=(x*cell_w,y*cell_h), \
-                #                      size=(cell_w,cell_h) \
-                #                      )
-                #_color_instruction = Color(r=color[0], g=color[1], b=color[2], a=1.0)
-                #self.free_widget.canvas.add(_color_instruction)
-                #self.free_widget.canvas.add(this_rect)
+                # this_rect = Rectangle(pos=(x*cell_w,y*cell_h), \
+                # size=(cell_w,cell_h) \
+                # )
+                # _color_instruction = Color(r=color[0], g=color[1],
+                # b=color[2], a=1.0)
+                # self.free_widget.canvas.add(_color_instruction)
+                # self.free_widget.canvas.add(this_rect)
                 idStr = color_to_id(color)
                 size16 = 1.0 / divisor
                 # thisBtn = Factory.Button(
                 thisBtn = RectButton(
                     # background_color=color,
                     color=color,
-                    #size_hint=(size16, size16),
+                    # size_hint=(size16, size16),
                     # pos=(xPx, yPx),
-                    #size=(cell_w, cell_h),
+                    # size=(cell_w, cell_h),
                     on_press=self.onChoose,
                     # border=(0, 0, 0, 0),
                 )
@@ -229,9 +236,11 @@ class ColorPopup(Popup):
                 btnCanvas = thisBtn.canvas
                 print("dir(canvas):{}".format(dir(thisBtn.canvas)))
                 print("canvas:{}".format(thisBtn.canvas))
-                print("canvas.children:{}".format(thisBtn.canvas.children))
+                print("canvas.children:{}"
+                      "".format(thisBtn.canvas.children))
                 # ^ See widget anatomy in readme.
-                print("canvas.length():{}".format(thisBtn.canvas.length()))
+                print("canvas.length():{}"
+                      "".format(thisBtn.canvas.length()))
                 good_size = None
                 good_pos = None
                 '''
@@ -290,18 +299,18 @@ class ColorPopup(Popup):
                 # btnCanvas.add(PopMatrix())
                 # id=idStr ID is not a string!
                 # self.free_widget.add_widget(thisBtn)
-                #thisBtn.canvas_before.add(_color_instruction)
+                # thisBtn.canvas_before.add(_color_instruction)
                 '''
                 #this_dict = dict()
                 #this_dict["rect"] = this_rect
                 #this_dict["ci"] = _color_instruction
                 print("C:"+idStr)
-                #print(" == Color: "+str( (_color_instruction.r, \
-                #                         _color_instruction.g, \
-                #                          _color_instruction.b ) ) )
-                #this_list.append(this_dict)
+                # print(" == Color: "+str( (_color_instruction.r, \
+                # # _color_instruction.g, \
+                # # _color_instruction.b ) ) )
+                # this_list.append(this_dict)
                 this_list.append(thisBtn)
-                #this_h_layout.add_widget(Rectangle(color=(x,y,128)))
+                # this_h_layout.add_widget(Rectangle(color=(x,y,128)))
                 this_h_layout.add_widget(thisBtn)
                 # xPx += cell_w
             # yPx += cell_h
@@ -318,23 +327,25 @@ class ColorPopup(Popup):
         # self.bind(on_touch_up=self.onAnyClick)
         # self.bind(on_dismiss=self.onDismiss)
 
-#    def onOKButtonClick(self, instance):
-#        #root.dismiss()
-#        self.pickedColor = self.mainColorPicker.color
-#        #self.isStillPushingColorButton = True
-#        self.dismiss()
-#
-#    def onCancelButtonClick(self, instance):
-#        #root.dismiss()
-#        #self.isStillPushingColorButton = True
-#        self.dismiss()
+'''
+    def onOKButtonClick(self, instance):
+        #root.dismiss()
+        self.pickedColor = self.mainColorPicker.color
+        #self.isStillPushingColorButton = True
+        self.dismiss()
 
-#     def onAnyClick(self, touch, *largs):
-#         if not self.isStillPushingColorButton:
-#             self.pickedColor = self.mainColorPicker.color
-#             self.isStillPushingColorButton = True
-#             self.dismiss()
-#         self.isStillPushingColorButton = False
+    def onCancelButtonClick(self, instance):
+        #root.dismiss()
+        #self.isStillPushingColorButton = True
+        self.dismiss()
 
-#     def onDismiss(self, instance):
-#         self.isStillPushingColorButton = True
+    def onAnyClick(self, touch, *largs):
+        if not self.isStillPushingColorButton:
+            self.pickedColor = self.mainColorPicker.color
+            self.isStillPushingColorButton = True
+            self.dismiss()
+        self.isStillPushingColorButton = False
+
+    def onDismiss(self, instance):
+        self.isStillPushingColorButton = True
+'''

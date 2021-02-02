@@ -10,7 +10,7 @@ except ImportError as ex:
     print("python -m pip install --user --upgrade kivy")
     exit(1)
 
-from kivypixels import KPImage #, load_image
+from kivypixels import KPImage  # , load_image
 from kivy.uix.widget import Widget
 from kivy.graphics import Fbo, ClearColor, ClearBuffers
 # from kivy.graphics.fbo import Fbo
@@ -60,13 +60,20 @@ class PixelWidget(Widget):
         self.texture = self.fbo.texture
 
         self.viewImage = KPImage(self.fbo.size)
-        # Since in kivy's pygame.image.fromstring(data, (self.fbo.size[0], self.fbo.size[1]), 'RGBA', True)
-        #   saves with odd (errant??) byte order,
-        #   channel offsets are:
-        self.viewImage_bOffset = 2 #bOffset = 0 #blue comes from green channel
-        self.viewImage_gOffset = 0 #gOffset = 1 #green comes from blue channel
-        self.viewImage_rOffset = 1 #rOffset = 2
-        self.viewImage_aOffset = 3 #aOffset = 3
+        # Since in kivy's pygame.image.fromstring(
+        # data,
+        # (self.fbo.size[0], self.fbo.size[1]),
+        # 'RGBA',
+        # True
+        # )
+        # saves with odd (errant??) byte order,
+        # channel offsets are:
+        self.viewImage_bOffset = 2  # bOffset = 0
+        # ^ blue comes from green channel
+        self.viewImage_gOffset = 0  # gOffset = 1
+        # ^ green comes from blue channel
+        self.viewImage_rOffset = 1  # rOffset = 2
+        self.viewImage_aOffset = 3  # aOffset = 3
         self.viewImage.bOffset=self.viewImage_bOffset
         self.viewImage.gOffset=self.viewImage_gOffset
         self.viewImage.rOffset=self.viewImage_rOffset
@@ -79,7 +86,8 @@ class PixelWidget(Widget):
 
         self.viewImage.setBrushPath("brush2.png")
         self.viewImage.setBrushColor((1,1,1,1))
-        # self.brushImage = Image(source=self.brushFileName, keep_data=True)
+        # self.brushImage = Image(source=self.brushFileName,
+        # keep_data=True)
         # self.brushImage = CoreImage(self.brushFileName)
 
         # self.brushTexture = self.brushImage.texture
@@ -220,7 +228,8 @@ class PixelWidget(Widget):
         elif (self.colorI<0):
             self.colorI = len(self.colorNames) - 1
         selectedColor = self.paletteColors[self.colorNames[self.colorI]]
-        print("Selected color " + str(self.colorI) + ": " + str(selectedColor))
+        print("Selected color " + str(self.colorI) + ": "
+              + str(selectedColor))
         self.viewImage.setBrushColor(selectedColor)
 
     def on_touch_down(self, touch):
@@ -248,7 +257,8 @@ class PixelWidget(Widget):
             # else:
                 # self.setBrushColor(self.paletteWidget.pickedColor)
             # self.brushAt(touch.x-self.pos[0], touch.y-self.pos[1])
-            self.viewImage.brushAt(touch.x-self.pos[0], touch.y-self.pos[1])
+            self.viewImage.brushAt(touch.x-self.pos[0],
+                                   touch.y-self.pos[1])
             self.uploadBufferToTexture()
 
     def on_touch_move(self, touch):

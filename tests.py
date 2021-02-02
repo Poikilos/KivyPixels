@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from kivypixels import KPImage #, load_image
+from kivypixels import KPImage  # , load_image
 
 print("  tests:")
 size = (128, 128)

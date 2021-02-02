@@ -978,6 +978,11 @@ class PPImage:
     def blit_copy_with_bo(self, src_data, srcStride,
             src_byteDepth, src_size, src_bOffset,
             src_gOffset, src_rOffset, src_aOffset):
+        '''
+        Copy the source image to self. All of the parameters describe
+        the source. The offsets are channel offsets relative to the
+        beginning of a pixel.
+        '''
         # this is much like LineCopy version, except instead of using
         # python array slicing it uses static_range_copy_with_bo
         srcStride = int(srcStride)

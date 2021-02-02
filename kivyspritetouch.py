@@ -45,6 +45,7 @@ from kivy.factory import Factory
 from kivypixels.pixelwidget import PixelWidget
 from kivypixels.colorpopup import ColorPopup
 
+
 class KivySpriteTouchApp(App):
 
     def build(self):
@@ -56,11 +57,11 @@ class KivySpriteTouchApp(App):
         self.mainWidget.add_widget(self.pixelWidget)
 
         self.buttonsLayout = BoxLayout(orientation='vertical',
-                                       size_hint=(.1,1.0))
+                                       size_hint=(.1, 1.0))
         self.mainWidget.add_widget(self.buttonsLayout)
 
         self.paletteWidget = ColorPopup(self.choseColor,
-                                        size_hint=(.9,.8))
+                                        size_hint=(.9, .8))
 
         self.saveButton = Factory.Button(text="Save")
         # id="saveButton"
@@ -71,7 +72,7 @@ class KivySpriteTouchApp(App):
         # id="paletteButton"
         self.buttonsLayout.add_widget(self.paletteButton)
         self.paletteButton.bind(on_press=self.paletteWidget.open)
-
+        '''
         # self.colorButton = Factory.Button(text="Color",
                                           # id="colorButton")
         # self.buttonsLayout.add_widget(self.colorButton)
@@ -82,7 +83,7 @@ class KivySpriteTouchApp(App):
         # self.buttonsLayout.add_widget(self.eraserButton)
         # self.eraserButton.bind(
             # on_press=self.pixelWidget.onEraserButtonClick)
-
+        '''
         return self.mainWidget
 
     def choseColor(self, color):
@@ -95,11 +96,11 @@ class KivySpriteTouchApp(App):
         # normalSize = self.brushImage.get_norm_image_size()
         # self.brushImage.size = (int(normalSize[0]), int(normalSize[1]))
         # data = bytes(self.brushImage.data)
-            # # convert from bytearray to bytes
+        # # convert from bytearray to bytes
         # surface = pygame.image.fromstring(data,
-            # self.brushImage.size,
-            # 'RGBA',
-            # True)
+        # self.brushImage.size,
+        # 'RGBA',
+        # True)
         # pygame.image.save(surface, "debug save (brush).png")
 
 
