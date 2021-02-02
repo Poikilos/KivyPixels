@@ -57,6 +57,7 @@ class RectButton(Button):
               "".format(self.plainComponents))
         print("RectButton plainColor:{}".format(self.plainColor))
         self.background_color = self.plainColor
+        self.background_normal = ''
         with self.canvas:
             pass
             # self.canvas.clear()
