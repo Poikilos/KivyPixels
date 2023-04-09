@@ -1,3 +1,7 @@
+# Merged with rotocanvas
+This project was merged with RotoCanvas. See [rotocanvas](https://github.com/Hierosoft/rotocanvas) instead.
+
+OLD readme:
 # KivySpriteTouch
 If you want to manipulate pixels then upload them to a widget, this is the LGPL library (not quite modular yet, but with example) for you.
 
